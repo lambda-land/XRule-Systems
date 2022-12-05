@@ -6,8 +6,10 @@ data Val
   = N Int
   | B Bool
   | L [Val]
+  | L' List
   | Abs OVar Expr
   | ValM MVar
+  | Err
   deriving Eq
 
 instance Show Val where
@@ -16,6 +18,8 @@ instance Show Val where
   show (L vs) = show vs
   show (Abs x e) = "(\\ " ++ x ++ " -> " ++ show e ++ ")"
   show (ValM m) = "ValM " ++ show m
+  show (L' l) = show l
+  show Err = "err"
 
 data Pat = PVal Val | PList [Pat] | PWild deriving Eq
 
@@ -23,6 +27,17 @@ instance Show Pat where
   show (PVal v) = show v
   show (PList ps) = show ps
   show PWild = "_"
+
+
+data List = Cons Val List | Nil deriving Eq
+
+lToList Nil = []
+lToList (Cons v l) = v : lToList l
+
+instance Show List where
+  show = show . lToList
+  -- show (Cons e l) = -- show e ++ " : " ++ show l
+  -- show Nil = "[]"
 
 data Expr
   = Lit Val
@@ -73,16 +88,19 @@ fact' = LetRec "fact" (Lit $ Abs "n" (Case (Var "n") [(PVal (N 0), Lit (N 1)), (
 type Env = [(OVar,Val)]
 
 fromJust (Just x) = x
-
+fromJust _ = error "fromJust: Nothing"
 
 eval :: Env -> Expr -> Val
+eval env (Lit (L' l)) = L' l
 eval env (Lit v) = v
 eval env (Var x) = fromJust (lookup x env)
 eval env (Let v e e') = eval ((v,eval env e):env) e'
 eval env (LetRec v e e') = eval ((v,eval ((v,eval env e):env) e):env) e'
 eval env (Op lhs op rhs) = evalOp op (eval env lhs) (eval env rhs)
+eval env (App (Var "head") e) = let (L' (Cons v _)) = eval env e in v
+eval env (App (Var "tail") e) = let (L' (Cons _ vs)) = eval env e in L' vs
 eval env (App e e') | Abs v e'' <- eval env e = eval ((v,eval env e'):env) e''
-                    | otherwise = error $ "not a function " ++ show (eval env e) ++ " " ++ show e'-- eval env $ App (Lit (eval env e)) (Lit (eval env e')) --  error $ "not a function: " ++ show e'
+                    | otherwise = Err -- error $ "not a function " ++ show (eval env e) ++ " " ++ show e'-- eval env $ App (Lit (eval env e)) (Lit (eval env e')) --  error $ "not a function: " ++ show e'
 eval env (Case e cases) = case eval env e of
   v -> case lookup (PVal v) cases of
     Just e' -> eval env e'
@@ -132,13 +150,19 @@ explain (J rho e v) = case e of
                       Var x -> [J rho (Lit (fromJust (lookup x rho))) v]
                       Let x e1 e2 -> let v1 = eval rho e1 in 
                                         [J rho e1 v1, J ((x,v1):rho) e2 v] --  v == eval ((x,v1):rho) e2
+                      App (Var "head") e1 -> let (L' (Cons e1' e1's)) = eval rho e1 in
+                                                [J rho e1 (L' (Cons e1' e1's))]
+                      App (Var "tail") e1 -> let (L' (Cons e1' e1's)) = eval rho e1 in
+                                                [J rho e1 (L' (Cons e1' e1's))]
                       App f e1 -> let Abs x e2 = eval rho f 
                                       v' = eval rho e1 
                                   in [J rho f (Abs x e2), J rho e1 v', J ((x,v'):rho) e2 v]
+                      Op (Lit (N n)) op (Lit (N m)) -> [J rho (Lit (N n)) (N n), J rho (Lit (N m)) (N m)]
                       Op e1 op e2 -> let v1 = eval rho e1
                                          v2 = eval rho e2
-                                     in [J rho e1 v1, J rho e2 v2, J rho (Lit (evalOp op v1 v2)) v]
-                
+                                     in [J rho e1 v1, J rho e2 v2, J rho (Op (Lit v1) op (Lit v2)) v]
+
+
 -- build :: Judge -> Proof
 -- build j = Node j 
 
@@ -212,3 +236,13 @@ hide j (Node j' ps) | j == j' = Nothing
 build :: Expr -> Proof
 build e = proof (J [] e (eval [] e))
 
+
+
+listProgram = App (Var "head") (Lit (L' (Cons (N 1) Nil)))
+
+-- head (tail (tail [1,2,3,4,5]))
+listProg2 = App (Var "head") (App (Var "tail") (App (Var "tail") (Lit (L' (Cons (N 1) (Cons (N 2) (Cons (N 3) (Cons (N 4) (Cons (N 5) Nil)))))))))
+
+
+-- (head (tail (tail [1,2,3,4,5]))) + (head [1,2,3,4,5])
+listProg3 = Op (App (Var "head") (App (Var "tail") (App (Var "tail") (Lit (L' (Cons (N 1) (Cons (N 2) (Cons (N 3) (Cons (N 4) (Cons (N 5) Nil)))))))))) Add (App (Var "head") (Lit (L' (Cons (N 1) (Cons (N 2) (Cons (N 3) (Cons (N 4) (Cons (N 5) Nil))))))))
