@@ -140,10 +140,9 @@ type MVar = String
 
 type Subst = [(MVar,Comp)]
 
-
-
 match :: Judge -> Subst
 match = undefined
+
 explain :: Judge -> [Judge]
 explain (J rho e v) = case e of
                       Lit v' | v == v' -> []
@@ -214,16 +213,31 @@ squareDerivation
 instance Show Judge where
   show (J rho e v) = show rho ++ " : " ++ show e ++ " => " ++ show v
 
+-- return a list of lines and the width of the longest line
+ppProof :: Proof -> (Int, [String])
+ppProof (Node j []) = (length line, [line]) where line = show j
+ppProof (Node j ps) = (width, allLines) where
 
-ppProof :: Int -> Proof -> String
-ppProof n (Node j []) = replicate n '\t' ++ show j ++ "\n\n"
-ppProof n (Node j ps) = replicate n '\t' ++ show j ++ "\n" ++ replicate n '\t' ++ l ++ "\n" ++ concatMap (ppProof (n+1)) ps
-  where l = replicate (length (show j)) '-'
+  pad :: a -> Int -> [a] -> [a]
+  pad a n xs = xs ++ replicate (n - length xs) a
 
+  appendLayout :: (Int, [String]) -> (Int, [String]) -> (Int, [String])
+  appendLayout (w1, lines1) (w2, lines2) = (w1 + 2 + w2, combined) where
+    common = max (length lines1) (length lines2)
+    (lines1', lines2') = (pad "" common lines1, pad "" common lines2)
+    lines1'' = map (pad ' ' w1) lines1'
+    combined = zipWith (\l r -> l ++ "  " ++ r) lines1'' lines2'
+
+  conclusion = show j
+  (premisesWidth, premisesLines) = foldr1 appendLayout (map ppProof ps)
+  width = max (length conclusion) premisesWidth
+  divider = replicate width '-'
+  concIndent = replicate ((width - length conclusion) `div` 2) ' '
+  premIndent = replicate ((width - premisesWidth) `div` 2) ' '
+  allLines = (concIndent ++ conclusion) : divider : map (premIndent ++) premisesLines
 
 instance Show Proof where
-  -- show (Node j ps) = show j ++ "\n" ++ concatMap (\s -> "\t"++s ++"\n") (map (\x -> show x ++ "") ps)
-  show jdg@(Node j ps) = ppProof 0 jdg -- "\t" ++ show j ++ "\n" ++ concatMap (\s -> "\t"++s) (map (\x -> show x ++ "") ps)
+  show pf = unlines (reverse ls) where (_, ls) = ppProof pf
 unjust (Just x) = x
 
 hide :: Judge -> Proof -> Maybe Proof
