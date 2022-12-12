@@ -64,6 +64,12 @@ instance Show Expr where
 data BinOp = Add | Mul | Sub | Div
   deriving (Show,Eq)
 
+-- let add = \x -> x + x in add 3
+addProg = Let "add" (Lit $ Abs "x" (Op (Var "x") Add (Var "x"))) (App (Var "add") (Lit (N 3)))
+
+-- let f = head [head, tail] in f [1,2,3]
+fProg = Let "f" (App (Var "head") (Lit (L' (Cons (Abs "x" (App (Var "head") (Var "x"))) (Cons (Abs "x" (App (Var "tail") (Var "x"))) Nil))))) (App (Var "f") (Lit (L' (Cons (N 1) (Cons (N 2) (Cons (N 3) Nil))))))
+
 
 
 -- letrec fact = \n -> case n of { 0 -> 1; _ -> n * fact (n - 1) } in fact 5
@@ -119,28 +125,19 @@ evalOp _ _ _ = error "evalOp: bad args"
 
 
 
--- let square = \x -> x * x in square 3
-
-
-
-
-
-data Env' = ECons (Either (OVar,Val) MVar) Env' | ENil -- | EMVar MVar
-
 data Comp
   = E Expr
   | V Val
   | R Env
 
--- newtype Judge = J { context :: Env, expr :: Expr, value :: Val }
---             --  J (Env,Expr,Val)
-data Judge = J Env Expr Val deriving Eq-- deriving Show
+
+data Judge = J Env Expr Val deriving Eq
 
 type MVar = String
 
 type Subst = [(MVar,Comp)]
 
-
+data Proof = Node Judge [Proof] -- deriving Show
 
 match :: Judge -> Subst
 match = undefined
@@ -163,11 +160,19 @@ explain (J rho e v) = case e of
                                      in [J rho e1 v1, J rho e2 v2, J rho (Op (Lit v1) op (Lit v2)) v]
 
 
--- build :: Judge -> Proof
--- build j = Node j 
-
 proof :: Judge -> Proof
 proof j = Node j (map proof (explain j))
+
+
+hide :: Judge -> Proof -> Maybe Proof
+hide j (Node j' ps) | j == j' = Nothing
+                    | otherwise = Just $ Node j' (map unjust $ filter (not . null) $ map (hide j) ps) 
+
+build :: Expr -> Proof
+build e = proof (J [] e (eval [] e))
+
+
+
 
 prog :: Expr
 prog = Let "square" (Lit $ Abs "x" (Op (Var "x") Mul (Var "x")))
@@ -200,7 +205,6 @@ squareUp41 = J (("x",N 3):rho) (Var "x") (N 3)
 squareUp42 :: Judge
 squareUp42 = J (("x",N 3):rho) (Op (Lit (N 3)) Mul (Lit (N 3))) (N 9)
 
-data Proof = Node Judge [Proof] -- deriving Show
 
 squareDerivation :: Proof
 squareDerivation 
@@ -226,16 +230,6 @@ instance Show Proof where
   show jdg@(Node j ps) = ppProof 0 jdg -- "\t" ++ show j ++ "\n" ++ concatMap (\s -> "\t"++s) (map (\x -> show x ++ "") ps)
 unjust (Just x) = x
 
-hide :: Judge -> Proof -> Maybe Proof
-hide j (Node j' ps) | j == j' = Nothing
-                    | otherwise = Just $ Node j' (map unjust $ filter (not . null) $ map (hide j) ps) 
-
-
-
-
-build :: Expr -> Proof
-build e = proof (J [] e (eval [] e))
-
 
 
 listProgram = App (Var "head") (Lit (L' (Cons (N 1) Nil)))
@@ -246,3 +240,33 @@ listProg2 = App (Var "head") (App (Var "tail") (App (Var "tail") (Lit (L' (Cons 
 
 -- (head (tail (tail [1,2,3,4,5]))) + (head [1,2,3,4,5])
 listProg3 = Op (App (Var "head") (App (Var "tail") (App (Var "tail") (Lit (L' (Cons (N 1) (Cons (N 2) (Cons (N 3) (Cons (N 4) (Cons (N 5) Nil)))))))))) Add (App (Var "head") (Lit (L' (Cons (N 1) (Cons (N 2) (Cons (N 3) (Cons (N 4) (Cons (N 5) Nil))))))))
+
+
+
+-- data Rule j = R String j [j]
+-- newtype RuleSystem j = RS [Rule j]
+
+class Latex a where
+  latex :: a -> String
+
+instance Latex BinOp where
+  latex Add = " + "
+  latex Mul = " * "
+  latex Sub = " - "
+  latex Div = " / "
+
+instance Latex Expr where
+  latex (Lit v) = latex v
+  latex (Var x) = x
+  latex (Let x e1 e2) = "\\texttt{let " ++ x ++ " = }" ++ latex e1 ++ "\\texttt{ in }" ++ latex e2
+  latex (App f e1) = latex f ++ "\texttt{(}" ++ latex e1 ++ "\textt{)}"
+  latex (Op e1 op e2) = latex e1 ++ latex op ++ latex e2
+
+
+instance Latex Val where
+  latex (N n) = show n
+  latex (B b) = show b
+  latex (L' l) = show l
+
+
+-- instance Latex List where
