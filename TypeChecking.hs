@@ -142,6 +142,12 @@ instance Explain Expr Type where
   -- premises (J g (Lit (L' l)) (TList t)) = [J g (Lit $ head $ lToList l) t]
 
 
+instance ShowJudge Expr Type where
+  showJudge (J g e t) = show g ++ " |- " ++ show e ++ " :: " ++ show t
+
+
+buildT :: Expr -> Proof Expr Type
+buildT e = proof (J [] e (evalT [] e))
 
 
 j1 :: Judge Expr Type

@@ -92,6 +92,7 @@ replace bound env (App e1 e2) = App (replace bound env e1) (replace bound env e2
 replace bound env (Op e1 op e2) = Op (replace bound env e1) op (replace bound env e2)
 replace bound env (Case e cases) = Case (replace bound env e) (map (\(p,e) -> (p,replace bound env e)) cases)
 replace bound env (ExpM m) = ExpM m
+-- replace bound env (Lit v) = Lit (eval env (Lit v))
 
 eval :: Env Val -> Expr -> Val
 eval env (Lit (L' l)) = L' l
