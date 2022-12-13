@@ -113,6 +113,47 @@ evalT g (App e1 e2) | (TArrow t1 t2) <- evalT g e1 = if t1 == evalT g e2 then t2
 -- evalT g (ExpM m) = TError
 
 
+-- type Env val = [(OVar,val)]
+
+-- data Judge exp val = J (Env val) exp val deriving Eq
+
+
+-- class Explain exp val where
+--   premises :: Judge exp val -> [Judge exp val]
+
+
+instance Show (Judge Expr Type) where
+  show (J g e t) = show g ++ " |- " ++ show e ++ " :: " ++ show t
+
+
+
+
+instance Explain Expr Type where
+  premises (J g (Lit (N n)) TInt) = []
+  premises (J g (Lit (B b)) TBool) = []
+  -- premises (J g (Lit (L vs)) (TList t)) = [J g (Lit $ head vs) t]
+  premises (J g (Let x e e') t) = [J g e (evalT g e), J ((x, evalT g e) : g) e' t]
+  premises (J g (LetRec x e e') t) = [J ((x, evalT g e) : g) e' t]
+  premises (J g (Var x) t) = []
+  premises (J g (Op e1 op e2) TInt) = [J g e1 TInt, J g e2 TInt]
+  premises (J g (App e1 e2) t) = [J g e1 (TArrow (evalT g e2) t), J g e2 (evalT g e2)]
+  -- premises (J g (Case e ps) t) = [J g e (evalT g e)] ++ map (\(p, e') -> J g e' t) ps
+  premises (J g (Lit (Abs x e)) (TArrow t1 t2)) = [J ((x, t1) : g) e t2]
+  -- premises (J g (Lit (L' l)) (TList t)) = [J g (Lit $ head $ lToList l) t]
+
+
+
+
+j1 :: Judge Expr Type
+j1 = J [] (Let "x" (Lit (N 1)) (Var "x")) TInt
+
+j2 :: Judge Expr Type
+j2 = J [("add",TArrow TInt (TArrow TInt TInt))] (App (App (Var "add") (Lit (N 2))) (Lit (N 3))) TInt
+
+
+
+
+
 -- 1 + 2
 exmp = Op (Lit (N 1)) Add (Lit (N 2))
 
@@ -124,4 +165,6 @@ exmp3 = Let "add" (Lit (Abs "x" (Lit (Abs "y" (Op (Var "x") Add (Var "y")))))) (
 
 -- let add = \x -> \y -> x + y in add 2 True
 exmp4 = Let "add" (Lit (Abs "x" (Lit (Abs "y" (Op (Var "x") Add (Var "y")))))) (App (App (Var "add") (Lit (N 2))) (Lit (N 3)))
+
+
 

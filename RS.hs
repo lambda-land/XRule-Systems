@@ -62,8 +62,13 @@ instance Show Expr where
   show (ExpM m) = "ExpM " ++ show m
 
 
-data BinOp = Add | Mul | Sub | Div
-  deriving (Show,Eq)
+data BinOp = Add | Mul | Sub | Div deriving Eq
+
+instance Show BinOp where
+  show Add = "+"
+  show Mul = "*"
+  show Sub = "-"
+  show Div = "/"
 
 
 fromJust (Just x) = x
