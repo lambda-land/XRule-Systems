@@ -1,10 +1,8 @@
 
-
 module RS where
 
-
-unjust (Just x) = x
-unjust _ = error "Unjust got nothing."
+import HelperFunctions 
+import Proof 
 
 data Val
   = N Int
@@ -16,32 +14,12 @@ data Val
   | Err
   deriving Eq
 
-instance Show Val where
-  show (N n) = show n
-  show (B b) = show b
-  show (L vs) = show vs
-  show (Abs x e) = "(\\ " ++ x ++ " -> " ++ show e ++ ")"
-  show (ValM m) = "ValM " ++ show m
-  show (L' l) = show l
-  show Err = "err"
-
 data Pat = PVal Val | PList [Pat] | PWild deriving Eq
-
-instance Show Pat where
-  show (PVal v) = show v
-  show (PList ps) = show ps
-  show PWild = "_"
-
 
 data List = Cons Val List | Nil deriving Eq
 
 lToList Nil = []
 lToList (Cons v l) = v : lToList l
-
-instance Show List where
-  show = show . lToList
-  -- show (Cons e l) = -- show e ++ " : " ++ show l
-  -- show Nil = "[]"
 
 data Expr
   = Lit Val
@@ -55,30 +33,9 @@ data Expr
   deriving Eq
 
 
-instance Show Expr where
-  show (Lit v) = show v
-  show (Var x) = x
-  show (Let x e1 e2) = "(let " ++ x ++ " = " ++ show e1 ++ " in " ++ show e2 ++ ")"
-  show (LetRec x e1 e2) = "(letrec " ++ x ++ " = " ++ show e1 ++ " in " ++ show e2 ++ ")"
-  show (Op e1 op e2) = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
-  show (App e1 e2) = "(" ++ show e1 ++ " " ++ show e2 ++ ")"
-  show (ExpM m) = "ExpM " ++ show m
-
-
 data BinOp = Add | Mul | Sub | Div deriving Eq
 
-instance Show BinOp where
-  show Add = "+"
-  show Mul = "*"
-  show Sub = "-"
-  show Div = "/"
 
-
-fromJust (Just x) = x
-fromJust Nothing = error "fromJust: Nothing"
-
-exmp4' = Let "add" (Lit (Abs "x" (Lit (Abs "y" (Op (Var "x") Add (Var "y")))))) (App (App (Var "add") (Lit (N 2))) (Lit (N 3)))
-exmp4'' = Let "add" (Lit (Abs "x" (Lit (Abs "y" (Op (Var "x") Add (Var "y")))))) (App (Var "add") (Lit (N 2)))
 
 replace :: [OVar] -> Env Val -> Expr -> Expr
 replace bound env (Var x) | not (elem x bound) = case lookup x env of
@@ -142,77 +99,10 @@ explain (J rho e v) = case e of
                                      in [J rho e1 v1, J rho e2 v2, J rho (Op (Lit v1) op (Lit v2)) v]
 
 
-
-
-
-
-
-
-type OVar = String
-type MVar = String
-
-type Env val = [(OVar,val)]
-
-data Judge exp val = J (Env val) exp val deriving Eq
-
-
-class Explain exp val where
-  premises :: Judge exp val -> [Judge exp val]
-
-instance Explain Expr Val where
-  premises = explain
-
-
-data Proof exp val = Node (Judge exp val) [Proof exp val] deriving Eq
-
-
-proof :: Explain exp val => Judge exp val -> Proof exp val
-proof j = Node j (map proof (premises j))
-
-
-hide :: (Eq exp, Eq val) => Judge exp val -> Proof exp val -> Maybe (Proof exp val)
-hide j (Node j' ps) | j == j' = Nothing
-                    | otherwise = Just $ Node j' (map unjust $ filter (not . null) $ map (hide j) ps) 
-
 build :: Expr -> Proof Expr Val
 build e = proof (J [] e (eval [] e))
 
 
-class ShowJudge exp val where
-  showJudge :: Judge exp val -> String
+instance Explain Expr Val where
+  premises = explain
 
-instance ShowJudge Expr Val where
-  showJudge (J rho e v) = show rho ++ " : " ++ show e ++ " => " ++ show v
-
-instance ShowJudge exp val => Show (Proof exp val) where
-  show pf = unlines (reverse ls) where (_, ls) = ppProof pf
-
-
--- return a list of lines and the width of the longest line
-ppProof :: ShowJudge exp val => Proof exp val -> (Int, [String])
-ppProof (Node j []) = (length line, [line]) where line = showJudge j
-ppProof (Node j ps) = (width, allLines) where
-
-  pad :: a -> Int -> [a] -> [a]
-  pad a n xs = xs ++ replicate (n - length xs) a
-
-  appendLayout :: (Int, [String]) -> (Int, [String]) -> (Int, [String])
-  appendLayout (w1, lines1) (w2, lines2) = (w1 + 2 + w2, combined) where
-    common = max (length lines1) (length lines2)
-    (lines1', lines2') = (pad "" common lines1, pad "" common lines2)
-    lines1'' = map (pad ' ' w1) lines1'
-    combined = zipWith (\l r -> l ++ "  " ++ r) lines1'' lines2'
-
-  conclusion = showJudge j
-  (premisesWidth, premisesLines) = foldr1 appendLayout (map ppProof ps)
-  width = max (length conclusion) premisesWidth
-  divider = replicate width '-'
-  concIndent = replicate ((width - length conclusion) `div` 2) ' '
-  premIndent = replicate ((width - premisesWidth) `div` 2) ' '
-  allLines = (concIndent ++ conclusion) : divider : map (premIndent ++) premisesLines
-
-
-
-listProg3 = Op (App (Var "head") (App (Var "tail") (App (Var "tail") (Lit (L' (Cons (N 1) (Cons (N 2) (Cons (N 3) (Cons (N 4) (Cons (N 5) Nil)))))))))) Add (App (Var "head") (Lit (L' (Cons (N 1) (Cons (N 2) (Cons (N 3) (Cons (N 4) (Cons (N 5) Nil))))))))
-prog = Let "square" (Lit $ Abs "x" (Op (Var "x") Mul (Var "x")))
-         (App (Var "square") (Lit (N 3)))
