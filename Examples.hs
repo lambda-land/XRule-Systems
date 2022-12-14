@@ -36,6 +36,12 @@ exmp4 = Let "add" (Lit (Abs "x" TInt (Lit (Abs "y" TInt (Op (Var "x") Add (Var "
 -- \x::Int -> \y::Int -> x + y 
 exmp5 = Lit (Abs "x" TInt (Lit (Abs "y" TInt (Op (Var "x") Add (Var "y")))))
 
+cT = [("add",TArrow TInt (TArrow TInt TInt))]
+eT = (App (Var "add") (Lit (N 2)))
+tT = (TArrow TBool TError)
+jT = J cT eT tT
+-- proof jT -- incorrect
+-- proof (J cT eT (TArrow TInt TInt)) -- correct
 
 main = do 
     putStrLn $ show $ buildT exmp4

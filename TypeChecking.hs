@@ -42,11 +42,24 @@ instance Explain Expr Type where
   premises x = case x of
       J g (Lit (N n)) TInt   -> []
       J g (Lit (B b)) TBool  -> []
+      -- J g (Let x e e') TError -> let t1 = evalT g e
+      --                                t2 = evalT ((x, t1):g) e'
+      --                             in [J g e t1, J ((x, t1):g) e' t2]
+      -- J g (Let x e e') t2    -> case evalT g e of -- Check if bound expression has type error
+      --                             TError -> [J g e TError,
+      --                                        J ((x, TError):g) e' (evalT ((x, TError):g) e')]
+      --                             t1     -> [J g e t1, 
+      --                                        J ((x, t1):g) e' t2]
       J g (Let x e e') t     -> [J g e (evalT g e), 
                                  J ((x, evalT g e) : g) e' t]
       J g (LetRec x e e') t  -> [J ((x, evalT g e) : g) e' t]
       J g (Var x) t          -> []
       J g (Op e1 op e2) TInt -> [J g e1 TInt, J g e2 TInt]
+      J g (App e1 e2) TError -> [J g e1 (evalT g e1), 
+                                 J g e2 (evalT g e2)]
+      -- J g (App e1 e2) t2      -> case evalT g e1 of 
+      --                           t2 [J g e1 (TArrow t1 t2), 
+      --                                 J g e2 (evalT g e2)]
       J g (App e1 e2) t      -> [J g e1 (TArrow (evalT g e2) t), 
                                  J g e2 (evalT g e2)]
       J g (Lit (Abs x t e)) (TArrow t1 t2) -> 
