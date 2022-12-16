@@ -47,7 +47,7 @@ instance ShowJudge Expr Val where
     
 
 instance ShowJudge Expr Type where
-    showJudge (J rho e v) = (take 1 (show rho)) ++ " |- " ++ show e ++ " :: " ++ show v
+    showJudge (J rho e v) = show rho ++ " |- " ++ show e ++ " :: " ++ show v
 
 
 instance Show (Judge Expr Type) where

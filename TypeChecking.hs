@@ -6,6 +6,33 @@ import Data.List (intercalate)
 import Proof 
 import Data.Maybe (fromJust) 
 
+unifyList :: [Type] -> [Type] -> Maybe [(Type, Type)]
+unifyList [] [] = Just []
+unifyList (t:ts) (t':ts') = case unify t t' of
+                                Just s1 -> case unifyList ts ts' of
+                                    Just s2 -> Just $ s1 ++ s2
+                                    Nothing -> Nothing
+                                Nothing -> Nothing
+
+unify :: Type -> Type -> Maybe [(Type, Type)]
+unify t1 t2 = case (t1, t2) of
+      (TVar x, TVar y)               -> return [(TVar x, TVar y)] 
+      (TVar x, t)                    -> Just [(TVar x, t)]
+      (t, TVar x)                    -> Just [(TVar x, t)]
+
+      (TArrow t1 t2, TArrow t1' t2') -> case unify t1 t1' of
+                                            Just s1 -> case unify t2 t2' of
+                                                Just s2 -> Just $ s1 ++ s2
+                                                Nothing -> Nothing
+                                            Nothing -> Nothing
+
+      (TTuple ts, TTuple ts')        -> if length ts == length ts' then unifyList ts ts' else Nothing 
+                                            
+      (TBool, TBool)                 -> Just []
+      (TInt, TInt)                   -> Just []
+      (TList t, TList t')            -> unify t t'
+      _                              -> Nothing
+
 
 
 evalT :: Env Type -> Expr -> Type
@@ -13,7 +40,7 @@ evalT g e = case e of
     Lit (N n)       -> TInt
     Lit (B b)       -> TBool
     Lit (L vs)      -> TList $ evalT g (Lit $ head vs)
-    Lit (Abs x t e) -> TArrow t (evalT g e)  -- TArrow (evalT g (Var x)) (evalT g e)
+    Lit (Abs x e t) -> t  -- TArrow (evalT g (Var x)) (evalT g e)
     Lit (L' l)      -> TList $ evalT g (Lit $ head $ lToList l)
     Lit (ValM m)    -> TError
     Lit Err         -> TError
@@ -22,12 +49,20 @@ evalT g e = case e of
                           Nothing -> TError
     Let x e e'      -> evalT ((x, evalT g e) : g) e'
     LetRec x e e'   -> evalT ((x, evalT g e) : g) e'
-    Op e1 op e2     -> TInt
+    Op e1 op e2     | elem op [Add,Mul,Sub,Div] -> case (evalT g e1, evalT g e2) of
+                                                       (TInt, TInt) -> TInt
+                                                       _            -> TError
+                    | elem op [Eq,LEq,LE]       -> case (evalT g e1, evalT g e2) of
+                                                      (TInt, TInt)   -> TBool
+                                                      (TBool, TBool) -> TBool
+                                                      _              -> TError
     App e1 e2       -> case evalT g e1 of
-                         TArrow t1 t2 ->  if t1 == evalT g e2 
-                                              then t2 else TError
-                         _ -> TError
-    _ -> error $ "Not implemented" ++ (show e) 
+                           TArrow t1 t2 -> if t1 == evalT g e2 then t2 else TError
+                           _            -> TError
+    If e1 e2 e3     -> case evalT g e1 of
+                          TBool -> if evalT g e2 == evalT g e3 then evalT g e2 else TError
+                          _     -> TError
+    _               -> error $ "Not implemented" ++ (show e) 
     
 
 -- evalT g (Case e ps) = case evalT g e of
@@ -39,7 +74,7 @@ evalT g e = case e of
 -- evalT g (ExpM m) = TError
 
 instance Explain Expr Type where
-  premises x | J g e t <- x , t == evalT g e =
+  premises x =
     case x of
       J g (Lit (N n)) TInt   -> []
       J g (Lit (B b)) TBool  -> []
@@ -52,16 +87,18 @@ instance Explain Expr Type where
                                  J g e2 (evalT g e2)]
       J g (App e1 e2) t      -> [J g e1 (TArrow (evalT g e2) t), 
                                  J g e2 (evalT g e2)]
-      J g (Lit (Abs x t e)) (TArrow t1 t2) -> 
-                             if t == t1 then [J ((x, t1) : g) e t2]
-                                        else [J ((x, t1): g) e TError] 
+      J g (Lit (Abs x e t)) (TArrow t1 t2) -> 
+                             if t == TArrow t1 t2
+                                 then [J ((x, t1):g) e t2]
+                                 else [J g e TError] 
       J g (Lit Err) TError   -> []
+      J g (If e1 e2 e3) t    -> [J g e1 TBool, J g e2 t, J g e3 t]
+      J g (Lit (L vs)) (TList t) -> [J g (Lit $ head vs) t] 
+      J g e TError           -> []
       
       J g e t -> error $ "Not implemented: " ++ (show e) ++ " " ++ (show t)
              
-             -- Judgment not derivable
-             | J g e (TVar "[impossible conclusion]") <- x = []
-             | otherwise = [J [] (Lit Err) (TVar "[impossible conclusion]")]
+
 
   -- premises (J g (Lit (L vs)) (TList t)) = [J g (Lit $ head vs) t]
   -- premises (J g (Case e ps) t) = [J g e (evalT g e)] ++ map (\(p, e') -> J g e' t) ps
