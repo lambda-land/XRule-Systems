@@ -40,7 +40,7 @@ instance ShowJudge Expr Val where
   showJudge (J rho e v) 
      | length rho > 1 = (show (take 1 rho)) ++ "..." ++ rest 
      | otherwise      = show rho ++ rest
-     where rest = ": " ++  show e ++ " => " ++ show v
+     where rest = " |- " ++  show e ++ " => " ++ show v
        
     
     

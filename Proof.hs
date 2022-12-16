@@ -14,7 +14,6 @@ class Explain exp val where
   premises :: Judge exp val -> [Judge exp val]
 
 
-
 data Proof exp val = Node (Judge exp val) [Proof exp val] deriving Eq
 
 
@@ -27,3 +26,6 @@ hide j (Node j' ps) | j == j' = Nothing
                     | otherwise = Just $ Node j' (map unjust $ filter (not . null) $ map (hide j) ps) 
 
 
+hideAfterLevel :: Int -> Proof exp val -> Maybe (Proof exp val) 
+hideAfterLevel n (Node j ps) | n == 0 = Nothing
+                             | otherwise = Just $ Node j (map unjust $ filter (not . null) $ map (hideAfterLevel (n-1)) ps) 

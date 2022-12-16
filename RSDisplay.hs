@@ -10,7 +10,7 @@ instance Show Val where
   show (N n) = show n
   show (B b) = show b
   show (L vs) = show vs
-  show (Abs x e t) = "(\\" ++ x ++ " -> " ++ show e ++ " :: " ++ show t ++ ")"
+  show (Abs x e t) = "(\\" ++ x ++ " -> " ++ show e -- ++ " :: " ++ show t ++ ")"
   show (ValM m) = "ValM " ++ show m
   show (L' l) = show l
   show Err = "err"
