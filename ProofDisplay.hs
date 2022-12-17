@@ -1,9 +1,7 @@
 module ProofDisplay where
 
 import Proof -- for proof 
-import RSDisplay
-import RS 
-
+import HelperFunctions (unjust)
 
 instance Show judge => Show (Proof judge) where
   show pf = unlines (reverse ls) where (_, ls) = ppProof pf
@@ -34,17 +32,8 @@ ppProof (Node j ps) = (width, allLines) where
 hideAfterLevel :: Int -> Proof judge -> Maybe (Proof judge) 
 hideAfterLevel n (Node j ps) 
       | n == 0 = Nothing
-      | otherwise = Just $ Node j (map fromJust $ filter (not . null) $ map (hideAfterLevel (n-1)) ps) 
+      | otherwise = Just $ Node j (map unjust $ filter (not . null) $ map (hideAfterLevel (n-1)) ps) 
 
 
-
-instance Show (Judge Expr Val) where
-  show (J rho e v) 
-     | length rho > 1 = (show (take 1 rho)) ++ "..." ++ rest 
-     | otherwise      = show rho ++ rest
-     where rest = " |- " ++  show e ++ " => " ++ show v
-       
-instance Show (Judge Expr Type) where
-    show (J rho e v) = show rho ++ " |- " ++ show e ++ " :: " ++ show v
 
 

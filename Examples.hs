@@ -1,6 +1,6 @@
 import ProofDisplay -- for display
 import Proof -- for proof 
-import Peanosystem -- for proof
+import PeanoSystem -- for proof
 
 import TypeChecking
 

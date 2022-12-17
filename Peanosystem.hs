@@ -1,6 +1,7 @@
-module Peanosystem where
+module PeanoSystem where
     
 import Proof
+import ProofDisplay
 
 data Nat
   = O

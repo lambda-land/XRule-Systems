@@ -1,6 +1,8 @@
 module RSDisplay where
 
 import RS
+import Proof
+import ProofDisplay
 import Data.List (intercalate)
 
 unjust (Just x) = x
@@ -64,4 +66,13 @@ instance Show Type where
 
 
   
+instance Show (Judge Expr Val) where
+  show (J rho e v) 
+     | length rho > 1 = (show (take 1 rho)) ++ "..." ++ rest 
+     | otherwise      = show rho ++ rest
+     where rest = " |- " ++  show e ++ " => " ++ show v
+       
+instance Show (Judge Expr Type) where
+    show (J rho e v) = show rho ++ " |- " ++ show e ++ " :: " ++ show v
+
 
