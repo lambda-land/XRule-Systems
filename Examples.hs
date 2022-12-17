@@ -1,5 +1,6 @@
 import ProofDisplay -- for display
 import Proof -- for proof 
+import Peanosystem -- for proof
 
 import TypeChecking
 
@@ -46,3 +47,5 @@ exmp5 = LetRec "fac" (Lit (Abs "x" (If (Op (Var "x") Eq (Lit (N 0))) (Lit (N 1))
 
 -- main = do 
 --     putStrLn $ show $ buildT exmp4
+
+peano1 = proof (EvenI 6)

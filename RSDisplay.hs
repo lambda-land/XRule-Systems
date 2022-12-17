@@ -33,7 +33,7 @@ instance Show Expr where
   show (App e1 (Lit v)) =  show e1 ++ " " ++  show v 
   show (App e1 e2) =  show e1 ++ "(" ++ show e2 ++ ")"
   show (Case e ps) = "(case " ++ show e ++ " of " ++ intercalate " | " (map show ps) ++ ")"
-  show (If e1 e2 e3) = "if " ++ show e1 ++ " ? " ++ show e2 ++ " : " ++ show e3 ++ ""
+  show (If e1 e2 e3) = "if " ++ show e1 ++ " then " ++ show e2 ++ " else " ++ show e3 ++ ""
   show (ExpM m) = "ExpM " ++ show m
 
 instance Show BinOp where

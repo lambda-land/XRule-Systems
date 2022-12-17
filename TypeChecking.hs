@@ -6,34 +6,6 @@ import Data.List (intercalate)
 import Proof 
 import Data.Maybe (fromJust) 
 
-unifyList :: [Type] -> [Type] -> Maybe [(Type, Type)]
-unifyList [] [] = Just []
-unifyList (t:ts) (t':ts') = case unify t t' of
-                                Just s1 -> case unifyList ts ts' of
-                                    Just s2 -> Just $ s1 ++ s2
-                                    Nothing -> Nothing
-                                Nothing -> Nothing
-
-unify :: Type -> Type -> Maybe [(Type, Type)]
-unify t1 t2 = case (t1, t2) of
-      (TVar x, TVar y)               -> return [(TVar x, TVar y)] 
-      (TVar x, t)                    -> Just [(TVar x, t)]
-      (t, TVar x)                    -> Just [(TVar x, t)]
-
-      (TArrow t1 t2, TArrow t1' t2') -> case unify t1 t1' of
-                                            Just s1 -> case unify t2 t2' of
-                                                Just s2 -> Just $ s1 ++ s2
-                                                Nothing -> Nothing
-                                            Nothing -> Nothing
-
-      (TTuple ts, TTuple ts')        -> if length ts == length ts' then unifyList ts ts' else Nothing 
-                                            
-      (TBool, TBool)                 -> Just []
-      (TInt, TInt)                   -> Just []
-      (TList t, TList t')            -> unify t t'
-      _                              -> Nothing
-
-
 
 evalT :: Env Type -> Expr -> Type
 evalT g e = case e of 
@@ -73,9 +45,8 @@ evalT g e = case e of
 --   _ -> TError
 -- evalT g (ExpM m) = TError
 
-instance Explain Expr Type where
-  premises x =
-    case x of
+instance Explain (Judge Expr Type) where
+  premises x = case x of
       J g (Lit (N n)) TInt   -> []
       J g (Lit (B b)) TBool  -> []
       J g (Let x e e') t     -> [J g e (evalT g e), 
@@ -105,7 +76,7 @@ instance Explain Expr Type where
   -- premises (J g (Lit (L' l)) (TList t)) = [J g (Lit $ head $ lToList l) t]
 
 
-buildT :: Expr -> Proof Expr Type
+buildT :: Expr -> Proof (Judge Expr Type)
 buildT e = proof (J [] e (evalT [] e))
 
 

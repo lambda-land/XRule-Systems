@@ -138,10 +138,10 @@ explain (J rho e v) = case e of
                               
 
 
-build :: Expr -> Proof Expr Val
+build :: Expr -> Proof (Judge Expr Val)
 build e = proof (J [] e (eval [] e))
 
 
-instance Explain Expr Val where
+instance Explain (Judge Expr Val) where
   premises = explain
 
