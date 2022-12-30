@@ -72,8 +72,8 @@ ppProblemProof p = go (show p)
         go [] = []
 
 
-
-
+-- putStr $ ppProblemProof $ nicerProblems . suppose $ LTJ 4 2
+-- putStr $ ppProblemProof $ nicerProblems . suppose $ Many [] [LD 1,LD 2,LD 3] [4,3,2,1]
 
 class Refine j e where
     refine :: e -> Proof j -> Proof j
