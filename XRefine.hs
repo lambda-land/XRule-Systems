@@ -37,32 +37,6 @@ filter1 _ = False
 
 
 
-
-data Problem j = Fine j | Issue j | Missing | Axiom deriving Eq
-
-instance Functor Problem where
-  fmap f (Fine j) = Fine (f j)
-  fmap f (Issue j) = Issue (f j)
-  fmap _ Missing = Missing
-  fmap _ Axiom = Axiom
-
-instance Show j => Show (Problem j) where
-  show (Fine j) = show j
-  show (Issue j) = "{>> " ++ show j ++ " <<}"-- "\x1b[1;31m {>> \x1b[0m " ++ show j ++ " \x1b[1;31m <<} \x1b[0m"
-  show Missing = "(no proof)" -- "\x1b[0;31m(no proof)\x1b[0m"
-  show Axiom = ""
-
-
-problems :: Explain j => Proof j -> Proof (Problem j)
-problems = fmap (\j -> if not $ null (premises j) then Fine j else Issue j)
-
-nicerProblems :: Explain j => Proof j -> Proof (Problem j)
-nicerProblems = go . problems 
-  where go (Node (Issue j) _) = Node (Issue j) [Node Missing []]
-        go (Node (Fine j) []) = Node (Fine j) [Node Axiom []]
-        go (Node j ps)        = Node j (map go ps)
-
-
 ppProblemProof :: Show j => Proof (Problem j) -> String
 ppProblemProof p = go (show p)
   where go ('{':'>':'>':xs) = "\x1b[1;31m{>>\x1b[0m" ++ go xs
@@ -71,19 +45,20 @@ ppProblemProof p = go (show p)
         go (x:xs) = x : go xs
         go [] = []
 
-
 -- putStr $ ppProblemProof $ nicerProblems . suppose $ LTJ 4 2
 -- putStr $ ppProblemProof $ nicerProblems . suppose $ Many [] [LD 1,LD 2,LD 3] [4,3,2,1]
+-- putStr $ ppProblemProof $ nicerProblems . suppose $ Many [] [LD 3,DUP,ADD,LD 4,SWAP,DUP] [6,7,6,4]
 
 class Refine j e where
     refine :: e -> Proof j -> Proof j
+-- Refining strategies for fixed rule system, or same strategy for various rule systems
 
--- instance Refine j Int where
---     refine 0 (Node j ps) = Node j []
---     refine n (Node j ps) = Node j (map (refine (n-1)) ps)
+instance Refine j Int where
+    refine 0 (Node j ps) = Node j []
+    refine n (Node j ps) = Node j (map (refine (n-1)) ps)
 
--- instance Refine j (j -> Bool) where
---     refine f (Node j ps) = if not $ f j then Node j 
+instance Refine j (j -> Bool) where
+    refine f (Node j ps) = if not $ f j then Node j 
 
 
 -- instance Refine (Judge (Env Val) Expr Val) (Val -> Bool) where

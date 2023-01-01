@@ -20,6 +20,18 @@ instance Explain EvenOddJ where
 
 
 
+data AddIntJ = AddI Int Int Int deriving Eq
+
+instance Show AddIntJ where
+  show (AddI x y z) = show x ++ " + " ++ show y ++ " = " ++ show z
+
+instance Explain AddIntJ where
+  premises (AddI 0 0 0) = [[]]
+  -- premises (AddI 0 m k) = [AddI 0 (m - 1) (k - 1)]
+  premises (AddI 0 m k) | m == k    = [[]]
+                        | otherwise = []
+  premises (AddI n m k) = [[AddI (n - 1) m (k - 1), AddI (n - 1) (m + 1) k]]
+
 
 
 data LTJ = LTJ Int Int deriving Eq
