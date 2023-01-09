@@ -49,16 +49,21 @@ ppProblemProof p = go (show p)
 -- putStr $ ppProblemProof $ nicerProblems . suppose $ Many [] [LD 1,LD 2,LD 3] [4,3,2,1]
 -- putStr $ ppProblemProof $ nicerProblems . suppose $ Many [] [LD 3,DUP,ADD,LD 4,SWAP,DUP] [6,7,6,4]
 
+-- whyNot :: (Eq j, Explain j) => j -> IO ()
+whyNot j = putStr $ ppProblemProof $ nicerProblems $ suppose j
+
+
+
 class Refine j e where
     refine :: e -> Proof j -> Proof j
 -- Refining strategies for fixed rule system, or same strategy for various rule systems
 
-instance Refine j Int where
-    refine 0 (Node j ps) = Node j []
-    refine n (Node j ps) = Node j (map (refine (n-1)) ps)
+-- instance Refine j Int where
+--     refine 0 (Node j ps) = Node j []
+--     refine n (Node j ps) = Node j (map (refine (n-1)) ps)
 
-instance Refine j (j -> Bool) where
-    refine f (Node j ps) = if not $ f j then Node j 
+-- instance Refine j (j -> Bool) where
+--     refine f (Node j ps) = if not $ f j then Node j 
 
 
 -- instance Refine (Judge (Env Val) Expr Val) (Val -> Bool) where

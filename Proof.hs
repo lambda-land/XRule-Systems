@@ -29,8 +29,12 @@ instance Traversable Proof where
   sequenceA (Node fj []) = flip Node [] <$> fj
   sequenceA (Node fj ps) = Node <$> fj <*> sequenceA (map sequenceA ps)
 
+
+
 class Explain judge where
   premises :: judge -> [[judge]]
+
+
 
 
 hide :: Eq judge => judge -> Proof judge -> Maybe (Proof judge)
@@ -38,13 +42,20 @@ hide j (Node j' ps)
     | j == j' = Nothing
     | otherwise = Just $ Node j' (map fromJust $ filter (not . null) $ map (hide j) ps)
 
+-- proofs :: Explain judge => judge -> [Proof judge]
+-- proofs j = concatMap (map (Node j) . lss . map proofs) (premises j)
+--   where lss :: [[a]] -> [[a]] -- sequence -- isomers
+--         lss [] = [[]]
+--         lss (a:as) = [concatMap (a':) (lss as) | a' <- a]
 
 proofs :: Explain judge => judge -> [Proof judge]
-proofs j = concatMap (map (Node j) . lss . map proofs) (premises j)
-  where lss :: [[a]] -> [[a]] -- sequence -- isomers
-        lss [] = [[]]
-        lss (a:as) = [concatMap (a':) (lss as) | a' <- a]
-
+proofs j | [[]] <- premises j = [Node j []]
+proofs j = do 
+    ps <- premises j
+    let pfs = map proofs ps
+    if or $ map null pfs 
+        then []
+        else map (Node j) $ sequence pfs
 
 
 
@@ -75,7 +86,6 @@ nicerProblems = go . problems
   where go (Node (Issue j) _) = Node (Issue j) [Node Missing []]
         go (Node (Fine j) []) = Node (Fine j) [Node Axiom []]
         go (Node j ps)        = Node j (map go ps)
-
 
 
 

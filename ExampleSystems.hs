@@ -42,7 +42,7 @@ instance Show LTJ where
 instance Explain LTJ where
   premises (LTJ n m) | n == m + 1 = []
                      | n == m - 1 = [[]]
-                     | otherwise  = let k = n + ((m - n) `div` 2) in [[LTJ n k, LTJ k m]] -- [[LTJ n (n+1),LTJ (n+1) m]]-- let k = n + ((m - n) `div` 2) in [[LTJ n k, LTJ k m]]
+                     | otherwise  = let k = n + ((m - n) `div` 2) in [[LTJ n k, LTJ k m],[LTJ n (n+1),LTJ (n+1) m]]-- let k = n + ((m - n) `div` 2) in [[LTJ n k, LTJ k m]]
 
 
 
