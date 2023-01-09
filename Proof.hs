@@ -101,6 +101,14 @@ nicerProblems = go . problems
 
 
 
+
+conclusion :: Proof j -> j
+conclusion (Node j _) = j
+
+children :: Proof j -> [Proof j]
+children (Node _ ps) = ps
+
+
 -- {} |- 1 + True :: Bool 
 -- {} |- (+) :: Int -> Bool -> Bool
 type OVar = String
