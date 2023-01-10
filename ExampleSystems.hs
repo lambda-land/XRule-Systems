@@ -82,7 +82,13 @@ instance Show ProgJ where
 instance Explain ProgJ where
   premises (Single s) = map (map Single) (premises s)
   premises (Many s [] s') | s == s' = [[]]
-  premises (Many s (o:p) s'') = [[Single (StackJ s o s'), Many s' p s'']]
+  premises (Many s [o] s') = [[Single (StackJ s o (exec s o))]]
+  premises (Many s (o:p) s'') = [ let n = length (o:p) `div` 2
+                                      p1 = take n (o:p)
+                                      p2 = drop n (o:p)
+                                      s''' = foldl exec s p1
+                                  in [Many s p1 s''', Many s''' p2 s'' ]
+                                , [Single (StackJ s o s'), Many s' p s'']]
     where s' = exec s o
   premises _ = []
 j1 = Many [] [LD 3, DUP, ADD, DUP, ADD] [12]

@@ -61,7 +61,7 @@ moveCursor d = do
                   s <- seen <$> get
                   c <- current <$> get
                   f <- full <$> get
-                  let k = length $ children $ subProof (tail c) s -- (tail c) s
+                  let k = length $ children $ subProof (reverse $ tail $ reverse c) s -- (tail c) s
                   let c' = move k d c
                   -- if d == "up" then expand else return ()
                   -- expand
@@ -111,8 +111,8 @@ input = do
 main' :: IO ()
 main' = do
     -- putStr "\x1B[A"
-    let j = LTJ 2 100
-    let p = head $ proofs j
+    let j = AddI 9 2 11-- Many [] [LD 3,DUP,ADD,DUP,LD 2,SWAP,ADD,DUP,LD 10,LD 4,ADD,SWAP,ADD] [22,8,6] -- LTJ 2 100
+    let p = head $ proofs j-- head $ drop 1 $ proofs j
     let vs = ViewState { seen = Node j [], current = [], full = p }
     main'' $ execState (put vs >> expand) vs
     where main'' vs' = do
@@ -141,19 +141,20 @@ getKey = reverse <$> getKey' ""
           more <- hReady stdin
           (if more then getKey' else return) (char:chars)
 
--- Simple menu controller
-main = do
-  hSetBuffering stdin NoBuffering
-  hSetEcho stdin False
-  key <- getKey
-  putStr "\r"
-  when (key /= "\ESC" && key /= "q") $ do
-    case key of
-      "\ESC[A" -> putStr "↑"
-      "\ESC[B" -> putStr "↓"
-      "\ESC[C" -> putStr "→"
-      "\ESC[D" -> putStr "←"
-      "\n"     -> putStr "⎆"
-      "\DEL"   -> putStr "⎋"
-      _        -> return ()
-    main
+-- -- Simple menu controller
+-- main = do
+--   hSetBuffering stdin NoBuffering
+--   hSetEcho stdin False
+--   key <- getKey
+--   putStr "\r"
+--   when (key /= "\ESC" && key /= "q") $ do
+--     case key of
+--       "\ESC[A" -> putStr "↑"
+--       "\ESC[B" -> putStr "↓"
+--       "\ESC[C" -> putStr "→"
+--       "\ESC[D" -> putStr "←"
+--       "\n"     -> putStr "⎆"
+--       "\DEL"   -> putStr "⎋"
+--       _        -> return ()
+--     main
+main = main'
