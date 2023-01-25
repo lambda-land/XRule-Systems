@@ -111,9 +111,9 @@ children (Node _ ps) = ps
 
 -- {} |- 1 + True :: Bool 
 -- {} |- (+) :: Int -> Bool -> Bool
-type OVar = String
-type MVar = String
+-- type OVar = String
+-- type MVar = String
 
-type Env val = [(OVar,val)]
-data Judge exp val = J (Env val) exp val deriving Eq
+-- type Env val = [(OVar,val)]
+-- data Judge exp val = J (Env val) exp val deriving Eq
 
