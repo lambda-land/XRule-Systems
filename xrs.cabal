@@ -11,7 +11,7 @@ cabal-version:      3.4
 --   http://haskell.org/cabal/users-guide/
 --
 -- The name of the package.
-name:               XRuleSystems
+name:               xrs
 
 -- The package version.
 -- See the Haskell package versioning policy (PVP) for standards
@@ -32,7 +32,7 @@ version:            0.1.0.0
 license:            NONE
 
 -- The package author(s).
-author:             Iain Moncrief
+author:             Prashant Kumar, Iain Moncrief
 
 -- An email address to which users can send suggestions, bug reports, and patches.
 maintainer:         moncrief@oregonstate.edu
@@ -97,7 +97,7 @@ executable XRuleSystems
     -- Other library packages from which modules are imported.
     build-depends:
         base ^>=4.17.0.0,
-        XRuleSystems
+        xrs
 
     -- Directories containing source files.
     hs-source-dirs:   app
@@ -121,8 +121,8 @@ executable XViewer
     -- Other library packages from which modules are imported.
     build-depends:
         base ^>=4.17.0.0,
-        XRuleSystems,
         mtl ^>=2.2.2,
+        xrs
 
     -- Directories containing source files.
     hs-source-dirs:   app
