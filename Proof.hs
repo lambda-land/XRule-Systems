@@ -88,7 +88,9 @@ nicerProblems = go . problems
         go (Node j ps)        = Node j (map go ps)
 
 
-
+hidePast :: Int -> Proof j -> Proof j
+hidePast 0 (Node j _) = Node j []
+hidePast n (Node j ps) = Node j (map (hidePast (n-1)) ps)
 
 
 -- proofs j = case premises' j of

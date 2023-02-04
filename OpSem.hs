@@ -37,7 +37,9 @@ eval env x = case x of
     LetRec v (Lit e) e' -> eval ((v,e):env) e'
     Op lhs op rhs       -> evalOp op (eval env lhs) (eval env rhs)
 
-    App (Var "head") e  -> let (L' (Cons v _)) = eval env e in v
+    App (Var "head") e  -> case eval env e of 
+                            (L' (Cons v _)) -> v
+                            (L' Nil)       -> error "head: empty list"
     App (Var "tail") e  -> let (L' (Cons _ vs)) = eval env e in L' vs
     App e e'            -> case eval env e of 
                               Abs v e'' t -> eval ((v,eval env e'):env) e''
@@ -136,10 +138,84 @@ trace :: Expr -> Proof EvalJ
 trace e = suppose (EvalJ [] e (eval [] e))
 
 
+-- data Val = N Int | B Bool | L [Val] | L' List | Abs OVar Expr Type | Err deriving Eq
+
+-- type TVar = String
+-- type OVar = String 
+
+-- data Type = TVar TVar | TBool | TInt | TArrow Type Type | TList Type | TTuple [Type] | TError deriving Eq
+
+
+-- data Pat = PVal Val | PList [Pat] | PWild deriving Eq
+
+-- data List = Cons Val List | Nil deriving Eq
+
+-- lToList Nil = []
+-- lToList (Cons v l) = v : lToList l
+
+-- (.->) = TArrow
+
+-- data Expr = Lit Val
+--           | Var OVar
+--           | Let OVar Expr Expr
+--           | LetRec OVar Expr Expr
+--           | Op Expr BinOp Expr
+--           | App Expr Expr
+--           | Case Expr [(Pat, Expr)]   
+--           | If Expr Expr Expr 
+--           deriving Eq
+
+
+-- data BinOp = Add | Mul | Sub | Div | Eq | LEq | LE deriving Eq
+
+
 -- letrec fac = \x -> if x == 0 then 1 else x * fac (x-1) in fac 5
 
 e1 :: Expr
 e1 = LetRec "fac" (Lit (Abs "x" (If (Op (Var "x") Eq (Lit (N 0))) (Lit (N 1)) (Op (Var "x") Mul (App (Var "fac") (Op (Var "x") Sub (Lit (N 1)))))) (TInt .-> TInt))) (App (Var "fac") (Lit (N 3)))
+
+
+med :: String -> String -> Int
+med xs [] = length xs -- deletion from s1
+med [] ys = length ys  -- insertion into s1 
+med xl@(x:xs) yl@(y:ys) 
+    | xl == yl = 0
+    | x == y = med xs ys
+    | otherwise = minimum [1+ med xs (y:ys), -- deletion
+                           1+ med (y:x:xs) (y:ys), -- insertion
+                           2+ med (y:xs) (y:ys)] -- substitution
+
+-- let rec minimum = \xs -> if xs == [] then 0 else if head xs < minimum (tail xs) then head xs else minimum (tail xs) in minimum [1,2,3,4,5]
+minExp :: Expr -> Expr
+minExp e = LetRec "minimum" (Lit (Abs "xs" (If (Op (Var "xs") Eq (Lit (L' Nil))) (Lit (N 99999999)) (If (Op (App (Var "head") (Var "xs")) LEq (App (Var "minimum") (App (Var "tail") (Var "xs")))) (App (Var "head") (Var "xs")) (App (Var "minimum") (App (Var "tail") (Var "xs"))))) (TList TInt .-> TInt))) (App (Var "minimum")  e)-- (Lit (L [N 1,N 2,N 3,N 4,N 5])))
+-- data List = Cons Val List | Nil deriving Eq
+
+-- cons 4 (cons 3 (cons 2 (cons 1 (cons 1 nil))))
+six :: Expr
+six = Lit (L' (Cons (N 4) (Cons (N 3) (Cons (N 2) (Cons (N 1) (Cons (N 1) Nil))))))
+
+example :: Expr
+example = minExp six
+
+-- letrec med = \xs -> \ys -> 
+--   if xs == [] then 
+--      length ys 
+--   else if ys == [] then 
+--           length xs 
+--        else if xs == ys then
+--                0
+--             else if head xs == head ys then
+--                     med (tail xs) (tail ys)
+--                  else minimum (cons (1 + med (tail xs) ys) (cons (1 + med (cons (head ys) xs) ys) (cons (2 + med (cons (head ys) (tail xs)) ys) nil))) in med "kitten" "sitting"
+
+
+-- hide 5 med (hide after 5 levels in )
+-- parseAST :: String -> Expr
+-- eval [] exp 
+-- eval rho (Lit v) = v
+-- 
+
+-- tarnsformProof :: Proof EvalJ -> Proof EvalJ 
 
 
 
@@ -182,3 +258,4 @@ instance Show BinOp where
   show Eq = "=="
   show LEq = "<=" 
   show LE = "<"
+
