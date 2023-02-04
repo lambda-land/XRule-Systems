@@ -1,0 +1,86 @@
+exmp5 = letrec fac = \x -> case x == 0  of
+                True   -> 1
+                False  -> x * fac (x - 1)
+        in fac(5)
+
+
+-- med :: String -> String -> Int
+-- med xs [] = length xs -- deletion from s1
+-- med [] ys = length ys  -- insertion into s1 
+-- med xl@(x:xs) yl@(y:ys) 
+--     | xl == yl = 0
+--     | x == y = med xs ys
+--     | otherwise = minimum [1+ med xs (y:ys), -- deletion
+--                            1+ med (y:x:xs) (y:ys), -- insertion
+--                            2+ med (y:xs) (y:ys)] -- substitution
+
+
+exmp1 = letrec minimum = \xs ->
+            case xs == [] of
+                True -> 0
+                False -> case length(xs) == 1 of
+                    True -> head(xs)
+                    False -> case head(xs) < head(tail(xs)) of
+                        True -> minimum (head(xs):tail(tail(xs)))
+                        False -> minimum (tail(xs))
+        in letrec med = \xs ys ->
+                case xs == ys of
+                    True -> 0
+                    False -> case xs == [] of
+                        True -> length(ys)
+                        False -> case ys == [] of
+                            True -> length(xs)
+                            False -> case head(xs) == head(ys) of
+                                True -> med (tail(xs),tail(ys))
+                                False -> minimum ([1+ med (tail(xs),ys), -- deletion
+                                                   1+ med (head(xs):xs,ys), -- insertion
+                                                   2+ med (tail(xs),tail(ys))]) -- substitution
+            in med("kitten","sitting")
+        
+
+-- exmp1 = letrec minimum = \xs ->
+--         if xs == []
+--             then 0
+--         else if length(xs) == 1
+--                 then head(xs)
+--                 else if head(xs) < head(tail(xs))
+--                     then minimum (head(xs):tail(tail(xs)))
+--                     else minimum (tail(xs))
+--         in letrec med = \xs ys -> 
+--             if xs == ys
+--                 then 0
+--                 else if xs == []
+--                         then length(ys)
+--                         else if ys == []
+--                              then length(xs)
+--                              else if head(xs) == head(ys)
+--                                      then med (tail(xs),tail(ys))
+--                                      else minimum ([1+ med (tail(xs),ys), -- deletion
+--                                                    1+ med (head(xs):xs,ys), -- insertion
+--                                                    2+ med (tail(xs),tail(ys))]) -- substitution
+--             in med("kitten","sitting")
+
+-- insert :: a -> [a] -> [[a]] 
+-- insert x [] = [[x]]
+-- insert x (y:ys) = (x:y:ys) : map (y:) (insert x ys)
+
+-- exmp2 = letrec map = \f xs ->
+--         if xs == []
+--             then []
+--             else f(head(xs)) : map(f,tail(xs))
+--         in letrec concatMap = \f xs ->
+--             if xs == []
+--                 then []
+--                 else map(f,head(xs)) ++ concatMap(f,tail(xs))
+--             in letrec insert = \x ys -> 
+--                 if ys == []
+--                     then [[x]]
+--                     else (x:ys) : map(\y -> head(ys):y,insert(x,tail(ys)))
+                        
+--                 in letrec permutations = \xs ->
+--                     if xs == []
+--                         then [[]]
+--                         else concatMap(\x -> map(\p -> x:p,permutations(delete(x,xs))),xs)
+--                     in permutations([1,2,3])
+
+        
