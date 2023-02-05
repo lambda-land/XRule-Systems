@@ -32,6 +32,9 @@ replace bound env expr = case expr of
     If e1 e2 e3       -> If (replace bound env e1) (replace bound env e2) (replace bound env e3)
     L es -> L (map (replace bound env) es)
     _ -> expr -- error $ show expr
+
+
+
 eval :: Env -> Expr -> Val
 eval env x = case x of 
     Lit (S s)           -> eval env $ L (map (Lit . C) s)
@@ -131,6 +134,7 @@ explain (EvalJ rho e v) = case e of
                               in [[EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
 
     Op (Lit (N n)) op (Lit (N m)) -> [[EvalJ rho (Lit (N n)) (N n), EvalJ rho (Lit (N m)) (N m)]]
+    Op (Lit v1) op (Lit v2)-> if v == evalOp op v1 v2 then [[]] else []
 
     Op e1 op e2            -> let v1 = eval rho e1
                                   v2 = eval rho e2
@@ -162,6 +166,8 @@ instance Explain EvalJ where
 trace :: Expr -> Proof EvalJ
 trace e = suppose (EvalJ [] e (eval [] e))
 
+traceProblems :: Expr -> Proof (Problem EvalJ)
+traceProblems e = nicerProblems $ suppose (EvalJ [] e (eval [] e))
 
 -- data Val = N Int | B Bool | L [Val] | L' List | Abs OVar Expr Type | Err deriving Eq
 

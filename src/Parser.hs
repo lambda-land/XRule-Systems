@@ -28,17 +28,18 @@ getExampleFromFile :: FilePath -> String -> IO Expr
 getExampleFromFile f s = do
   p <- parseFromFile f
   return (getBinding s p)
-
+getExampleFromFile' = getExampleFromFile "app/Ex1.xr"
 evalFromFile en = getExampleFromFile "app/Ex1.xr" en >>= (\e -> print $ eval [] e)
 
 traceFromFile en = getExampleFromFile "app/Ex1.xr" en >>= (\e -> print $ trace e)
+traceProblemsFromFile en = getExampleFromFile "app/Ex1.xr" en >>= (\e -> print $ traceProblems e)
 
 parse :: String -> Either String [(String,Expr)]
 parse s = case pSCPL (resolveLayout False $ myLexer s) of 
             Left err -> Left err
             Right x  -> Right (transSCPL x)
 
-
+j1 = EvalJ [] (Op (L []) Eq (L [])) (B True)
 
 
 

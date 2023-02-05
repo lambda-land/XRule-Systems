@@ -1,7 +1,7 @@
 iain = let id = \x -> x in id("Iain")
 
 
-headEx = tail([1,2,3])
+headEx = head([1,2,3])
 
 
 
@@ -10,6 +10,21 @@ exmp5 = letrec fac = \x -> case x == 0  of
                 False  -> x * fac (x - 1)
         in fac(5)
 
+minf = letrec min = \x y -> case x < y of
+                    True -> x
+                    False -> y
+                in min(1,2)
+
+add = letrec add = \x y -> x + y
+        in add(1,2)
+
+sum = letrec sum = \xs -> case xs == [] of
+                True -> 0
+                False -> head(xs) + sum(tail(xs))
+        in sum([1,2,3])
+
+leq = let f = \x -> x == [] in f([])
+leq2 = [] == []
 
 -- med :: String -> String -> Int
 -- med xs [] = length xs -- deletion from s1
@@ -45,13 +60,13 @@ paramTest = letrec reverse = \xs ->
                 case xs == [] of
                     True -> []
                     False -> reverse(tail(xs)) ++ [head(xs)]
-            in reverse([1,2,3,4,5])
+            in reverse([1])
 
 map = letrec map = \f xs ->
             case xs == [] of
                 True -> []
                 False -> f(head(xs)) : map(f,tail(xs))
-        in map(\x -> x + 1,[1,2,3,4,5])
+        in map(\x -> x + 1,[1])
 
 fold = letrec fold = \f acc xs ->
             case xs == [] of
