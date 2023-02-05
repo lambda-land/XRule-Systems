@@ -87,7 +87,11 @@ minFold = letrec fold = \f acc xs ->
 
 listT = 1 : [2,3]
 
-exmp1 = letrec minimum = \xs ->
+exmp1 = letrec length = \xs ->
+            case xs == [] of
+                True -> 0
+                False -> 1 + length(tail(xs))
+        in letrec minimum = \xs ->
             case xs == [] of
                 True -> 0
                 False -> case length(xs) == 1 of
@@ -107,7 +111,7 @@ exmp1 = letrec minimum = \xs ->
                                 False -> minimum ([1+ med (tail(xs),ys), -- deletion
                                                    1+ med (head(xs):xs,ys), -- insertion
                                                    2+ med (tail(xs),tail(ys))]) -- substitution
-            in med("kitten","sitting")
+            in med("ab","abc")
         
 
 -- exmp1 = letrec minimum = \xs ->
