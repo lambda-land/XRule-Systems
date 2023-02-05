@@ -38,7 +38,7 @@ eval env x = case x of
     Lit (L' l)          -> L' l
     Lit (Abs v e t)     -> (Abs v (replace [v] env e) t) 
     Lit v               -> v 
-    Var x               -> case lookup x env of { Just y -> y; _ -> error $ x ++ " " ++ show env }-- fromJust (lookup x env)
+    Var x               -> case lookup x env of { Just y -> y; _ -> error $ x ++ " -| " ++ show env }-- fromJust (lookup x env)
     Let v e e'          -> eval ((v,eval env e):env) e'
     LetRec v (Lit e) e' -> eval ((v,e):env) e'
     Op lhs op rhs       -> evalOp op (eval env lhs) (eval env rhs)
@@ -98,7 +98,12 @@ instance Show EvalJ where
 explain :: EvalJ -> [[EvalJ]]
 explain (EvalJ rho e v) = case e of
     Lit v' | v == v'       -> [[]]
+    Lit (S s) | v == L' (map C s) -> [[]]
+
     Var x                  -> [[EvalJ rho (Lit (fromJust (lookup x rho))) v]]
+
+    L []                   -> [[]]
+    L (e:es)               -> [[EvalJ rho e (eval rho e),EvalJ rho (L es) (eval rho (L es))]]
 
     Let x e1 e2            -> let v1 = eval rho e1 
                               in [[EvalJ rho e1 v1, EvalJ ((x,v1):rho) e2 v]]
@@ -106,14 +111,14 @@ explain (EvalJ rho e v) = case e of
     LetRec x (Lit xv) e2   -> case lookup x rho of 
                                   Nothing -> [[EvalJ ((x,xv):rho) e2 v]] 
                                   _       -> [[EvalJ rho e2 v]]
-
+    App (App (Var "cons") e1) e2 -> [[EvalJ rho e1 (eval rho e1), EvalJ rho e2 (eval rho e2)]]
     App (Var "head") e1    -> let (L' (e1':e1's)) = eval rho e1
                               in [[EvalJ rho e1 (L' (e1':e1's))]]
 
     App (Var "tail") e1    -> let (L' (e1':e1's)) = eval rho e1
                               in [[EvalJ rho e1 (L' (e1':e1's))]]
-    App (App (Var "cons") e1) e2 -> let (L' e2') = eval rho e2
-                                    in [[EvalJ rho e1 (eval rho e1), EvalJ rho e2 (L' e2')]]
+    -- App (App (Var "cons") e1) e2 -> let (L' e2') = eval rho e2
+    --                                 in [[EvalJ rho e1 (eval rho e1), EvalJ rho e2 (L' e2')]]
     -- App (Var "head") e1    -> let (L' (Cons e1' e1's)) = eval rho e1
     --                           in [[EvalJ rho e1 (L' (Cons e1' e1's))]]
 
@@ -142,8 +147,8 @@ explain (EvalJ rho e v) = case e of
                                   B False -> [[EvalJ rho e1 v1,EvalJ rho e3 v]]
                                   _       -> []
                                   -- _       -> error "not a boolean" 
-    L es -> concatMap explain [ EvalJ rho e (eval rho e) | e <- es]
-    _ -> error $ show e                     
+    -- L es -> concatMap explain [ EvalJ rho e (eval rho e) | e <- es]
+    _ -> error $ show (EvalJ rho e v)                    
 
 safeExplain :: EvalJ -> [[EvalJ]]
 safeExplain x = case safeCatch (explain x) of

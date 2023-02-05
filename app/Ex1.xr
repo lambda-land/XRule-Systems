@@ -139,12 +139,12 @@ exmp2 = letrec map = \f xs ->
                         else concatMap(insert(head(xs)),permutations(tail(xs)))
                     in permutations([1,2,3])
 
-                    
+
                                     -- in insert(1,[2,3,4])
 
             -- in concatMap(\x -> [x * 2], [1,2,3])
 
-testL = [[1]]
+testL = 2:[[1]]
 -- permutations :: [a] -> [[a]]
 -- permutations [] = [[]]
 -- permutations (x:xs) = concatMap (insert x) (permutations xs)

@@ -62,6 +62,7 @@ instance Show Expr where
   show (Let x e1 e2) = "let " ++ x ++ " = " ++ show e1 ++ " in " ++ show e2 
   show (LetRec x e1 e2) = "rec " ++ x ++ " = " ++ show e1 ++ " in " ++ show e2 
   show (Op e1 op e2) = show e1 ++ " " ++ show op ++ " " ++ show e2 
+  show (App (App (Var "cons") e1) e2) = show e1 ++ " : " ++ show e2
   show (App e1 (Lit v)) =  show e1 ++ " " ++  show v 
   show (App e1 e2) =  show e1 ++ "(" ++ show e2 ++ ")"
   show (Case e ps) = "(case " ++ show e ++ " of " ++ intercalate " | " (map show ps) ++ ")"
