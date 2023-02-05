@@ -12,6 +12,10 @@ type Env = [(OVar,Val)]
 
 replace :: [OVar] -> Env -> Expr -> Expr
 replace bound env expr = case expr of
+    Var "head" -> Var "head"
+    Var "length" -> Var "length"
+    Var "tail" -> Var "tail"
+    Var "cons" -> Var "cons"
     Var x             -> case not (elem x bound) of
                              True -> case lookup x env of
                                  Just v  -> Lit v
@@ -26,21 +30,28 @@ replace bound env expr = case expr of
     Op e1 op e2       -> Op (replace bound env e1) op (replace bound env e2)
     Case e cases      -> Case (replace bound env e) (map (\(p,e) -> (p,replace bound env e)) cases)
     If e1 e2 e3       -> If (replace bound env e1) (replace bound env e2) (replace bound env e3)
-
+    L es -> L (map (replace bound env) es)
+    _ -> expr -- error $ show expr
 eval :: Env -> Expr -> Val
 eval env x = case x of 
+    Lit (S s)           -> eval env $ L (map (Lit . C) s)
     Lit (L' l)          -> L' l
     Lit (Abs v e t)     -> (Abs v (replace [v] env e) t) 
     Lit v               -> v 
-    Var x               -> fromJust (lookup x env)
+    Var x               -> case lookup x env of { Just y -> y; _ -> error $ x ++ " " ++ show env }-- fromJust (lookup x env)
     Let v e e'          -> eval ((v,eval env e):env) e'
     LetRec v (Lit e) e' -> eval ((v,e):env) e'
     Op lhs op rhs       -> evalOp op (eval env lhs) (eval env rhs)
+    L es                -> L' (map (eval env) es)
+    -- App (App (Var "cons") e) e' -> L' (Cons (eval env e) (eval env e'))
+    -- App (Var "head") e  -> case eval env e of 
+    --                         (L' (Cons v _)) -> v
+    --                         (L' Nil)       -> error "head: empty list"
+    App (App (Var "cons") e) e' -> let (L' vs) = eval env e' in L' (eval env e : vs)
+    App (Var "head") e  -> let (L' (x:_)) = eval env e in x
+    App (Var "tail") e  -> let (L' (_:xs)) = eval env e in L' xs
 
-    App (Var "head") e  -> case eval env e of 
-                            (L' (Cons v _)) -> v
-                            (L' Nil)       -> error "head: empty list"
-    App (Var "tail") e  -> let (L' (Cons _ vs)) = eval env e in L' vs
+    -- App (Var "tail") e  -> let (L' (Cons _ vs)) = eval env e in L' vs
     App e e'            -> case eval env e of 
                               Abs v e'' t -> eval ((v,eval env e'):env) e''
                               otherwise   -> Err
@@ -67,6 +78,7 @@ evalOp op v1 v2 = case (op,v1,v2) of
     (Eq,_,_)      -> B (v1==v2)
     (LEq,N x,N y) -> B (x<=y) 
     (LE,N x,N y)  -> B (x<y)
+    (Append,L' x,L' y) -> L' (x++y)
     _ -> error "evalOp: bad args"
 
 
@@ -95,11 +107,18 @@ explain (EvalJ rho e v) = case e of
                                   Nothing -> [[EvalJ ((x,xv):rho) e2 v]] 
                                   _       -> [[EvalJ rho e2 v]]
 
-    App (Var "head") e1    -> let (L' (Cons e1' e1's)) = eval rho e1
-                              in [[EvalJ rho e1 (L' (Cons e1' e1's))]]
+    App (Var "head") e1    -> let (L' (e1':e1's)) = eval rho e1
+                              in [[EvalJ rho e1 (L' (e1':e1's))]]
 
-    App (Var "tail") e1    -> let (L' (Cons e1' e1's)) = eval rho e1
-                              in [[EvalJ rho e1 (L' (Cons e1' e1's))]]
+    App (Var "tail") e1    -> let (L' (e1':e1's)) = eval rho e1
+                              in [[EvalJ rho e1 (L' (e1':e1's))]]
+    App (App (Var "cons") e1) e2 -> let (L' e2') = eval rho e2
+                                    in [[EvalJ rho e1 (eval rho e1), EvalJ rho e2 (L' e2')]]
+    -- App (Var "head") e1    -> let (L' (Cons e1' e1's)) = eval rho e1
+    --                           in [[EvalJ rho e1 (L' (Cons e1' e1's))]]
+
+    -- App (Var "tail") e1    -> let (L' (Cons e1' e1's)) = eval rho e1
+    --                           in [[EvalJ rho e1 (L' (Cons e1' e1's))]]
 
     App f e1               -> let Abs x e2 t = eval rho f 
                                   v'         = eval rho e1 
@@ -123,7 +142,8 @@ explain (EvalJ rho e v) = case e of
                                   B False -> [[EvalJ rho e1 v1,EvalJ rho e3 v]]
                                   _       -> []
                                   -- _       -> error "not a boolean" 
-                                
+    L es -> concatMap explain [ EvalJ rho e (eval rho e) | e <- es]
+    _ -> error $ show e                     
 
 safeExplain :: EvalJ -> [[EvalJ]]
 safeExplain x = case safeCatch (explain x) of
@@ -171,31 +191,31 @@ trace e = suppose (EvalJ [] e (eval [] e))
 
 -- letrec fac = \x -> if x == 0 then 1 else x * fac (x-1) in fac 5
 
-e1 :: Expr
-e1 = LetRec "fac" (Lit (Abs "x" (If (Op (Var "x") Eq (Lit (N 0))) (Lit (N 1)) (Op (Var "x") Mul (App (Var "fac") (Op (Var "x") Sub (Lit (N 1)))))) (TInt .-> TInt))) (App (Var "fac") (Lit (N 3)))
+-- e1 :: Expr
+-- e1 = LetRec "fac" (Lit (Abs "x" (If (Op (Var "x") Eq (Lit (N 0))) (Lit (N 1)) (Op (Var "x") Mul (App (Var "fac") (Op (Var "x") Sub (Lit (N 1)))))) (TInt .-> TInt))) (App (Var "fac") (Lit (N 3)))
 
 
-med :: String -> String -> Int
-med xs [] = length xs -- deletion from s1
-med [] ys = length ys  -- insertion into s1 
-med xl@(x:xs) yl@(y:ys) 
-    | xl == yl = 0
-    | x == y = med xs ys
-    | otherwise = minimum [1+ med xs (y:ys), -- deletion
-                           1+ med (y:x:xs) (y:ys), -- insertion
-                           2+ med (y:xs) (y:ys)] -- substitution
+-- med :: String -> String -> Int
+-- med xs [] = length xs -- deletion from s1
+-- med [] ys = length ys  -- insertion into s1 
+-- med xl@(x:xs) yl@(y:ys) 
+--     | xl == yl = 0
+--     | x == y = med xs ys
+--     | otherwise = minimum [1+ med xs (y:ys), -- deletion
+--                            1+ med (y:x:xs) (y:ys), -- insertion
+--                            2+ med (y:xs) (y:ys)] -- substitution
 
--- let rec minimum = \xs -> if xs == [] then 0 else if head xs < minimum (tail xs) then head xs else minimum (tail xs) in minimum [1,2,3,4,5]
-minExp :: Expr -> Expr
-minExp e = LetRec "minimum" (Lit (Abs "xs" (If (Op (Var "xs") Eq (Lit (L' Nil))) (Lit (N 99999999)) (If (Op (App (Var "head") (Var "xs")) LEq (App (Var "minimum") (App (Var "tail") (Var "xs")))) (App (Var "head") (Var "xs")) (App (Var "minimum") (App (Var "tail") (Var "xs"))))) (TList TInt .-> TInt))) (App (Var "minimum")  e)-- (Lit (L [N 1,N 2,N 3,N 4,N 5])))
--- data List = Cons Val List | Nil deriving Eq
+-- -- let rec minimum = \xs -> if xs == [] then 0 else if head xs < minimum (tail xs) then head xs else minimum (tail xs) in minimum [1,2,3,4,5]
+-- minExp :: Expr -> Expr
+-- minExp e = LetRec "minimum" (Lit (Abs "xs" (If (Op (Var "xs") Eq (Lit (L' Nil))) (Lit (N 99999999)) (If (Op (App (Var "head") (Var "xs")) LEq (App (Var "minimum") (App (Var "tail") (Var "xs")))) (App (Var "head") (Var "xs")) (App (Var "minimum") (App (Var "tail") (Var "xs"))))) (TList TInt .-> TInt))) (App (Var "minimum")  e)-- (Lit (L [N 1,N 2,N 3,N 4,N 5])))
+-- -- data List = Cons Val List | Nil deriving Eq
 
--- cons 4 (cons 3 (cons 2 (cons 1 (cons 1 nil))))
-six :: Expr
-six = Lit (L' (Cons (N 4) (Cons (N 3) (Cons (N 2) (Cons (N 1) (Cons (N 1) Nil))))))
+-- -- cons 4 (cons 3 (cons 2 (cons 1 (cons 1 nil))))
+-- six :: Expr
+-- six = Lit (L' (Cons (N 4) (Cons (N 3) (Cons (N 2) (Cons (N 1) (Cons (N 1) Nil))))))
 
-example :: Expr
-example = minExp six
+-- example :: Expr
+-- example = minExp six
 
 -- letrec med = \xs -> \ys -> 
 --   if xs == [] then 

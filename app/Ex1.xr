@@ -1,3 +1,10 @@
+iain = let id = \x -> x in id("Iain")
+
+
+headEx = tail([1,2,3])
+
+
+
 exmp5 = letrec fac = \x -> case x == 0  of
                 True   -> 1
                 False  -> x * fac (x - 1)
@@ -14,6 +21,56 @@ exmp5 = letrec fac = \x -> case x == 0  of
 --                            1+ med (y:x:xs) (y:ys), -- insertion
 --                            2+ med (y:xs) (y:ys)] -- substitution
 
+lenEx = letrec length = \xs ->
+            case xs == [] of
+                True -> 0
+                False -> 1 + length(tail(xs))
+        in length([1,2,3,4,5])
+
+min = letrec length = \xs ->
+            case xs == [] of
+                True -> 0
+                False -> 1 + length(tail(xs))
+        in letrec minimum = \xs ->
+            case xs == [] of
+                True -> 0
+                False -> case length(xs) == 1 of
+                    True -> head(xs)
+                    False -> case head(xs) < head(tail(xs)) of
+                        True -> minimum (head(xs):tail(tail(xs)))
+                        False -> minimum (tail(xs))
+        in minimum([1,2,3,4,5])
+
+paramTest = letrec reverse = \xs ->
+                case xs == [] of
+                    True -> []
+                    False -> reverse(tail(xs)) ++ [head(xs)]
+            in reverse([1,2,3,4,5])
+
+map = letrec map = \f xs ->
+            case xs == [] of
+                True -> []
+                False -> f(head(xs)) : map(f,tail(xs))
+        in map(\x -> x + 1,[1,2,3,4,5])
+
+fold = letrec fold = \f acc xs ->
+            case xs == [] of
+                True -> acc
+                False -> f(head(xs),fold(f,acc,tail(xs)))
+        in fold(\x y -> x + y,0,[1,2,3,4,5])
+
+minFold = letrec fold = \f acc xs ->
+            case xs == [] of
+                True -> acc
+                False -> f(head(xs),fold(f,acc,tail(xs)))
+            in let min = \x y -> case x < y of
+                    True -> x
+                    False -> y
+                in fold(min,9999,[1,2,3,4,5])
+
+
+
+listT = 1 : [2,3]
 
 exmp1 = letrec minimum = \xs ->
             case xs == [] of
@@ -64,23 +121,34 @@ exmp1 = letrec minimum = \xs ->
 -- insert x [] = [[x]]
 -- insert x (y:ys) = (x:y:ys) : map (y:) (insert x ys)
 
--- exmp2 = letrec map = \f xs ->
---         if xs == []
---             then []
---             else f(head(xs)) : map(f,tail(xs))
---         in letrec concatMap = \f xs ->
---             if xs == []
---                 then []
---                 else map(f,head(xs)) ++ concatMap(f,tail(xs))
---             in letrec insert = \x ys -> 
---                 if ys == []
---                     then [[x]]
---                     else (x:ys) : map(\y -> head(ys):y,insert(x,tail(ys)))
-                        
---                 in letrec permutations = \xs ->
---                     if xs == []
---                         then [[]]
---                         else concatMap(\x -> map(\p -> x:p,permutations(delete(x,xs))),xs)
---                     in permutations([1,2,3])
+exmp2 = letrec map = \f xs ->
+        if xs == []
+            then []
+            else f(head(xs)) : map(f,tail(xs))
+        in letrec concatMap = \f xs ->
+            if xs == []
+                then []
+                else f(head(xs)) ++ concatMap(f,tail(xs))
+            in letrec insert = \x ys -> 
+                if ys == []
+                    then [[x]]
+                    else (x:ys) : map((\zs -> (head(ys) : zs)),insert(x,tail(ys)))
+                in letrec permutations = \xs ->
+                    if xs == []
+                        then [[]]
+                        else concatMap(insert(head(xs)),permutations(tail(xs)))
+                    in permutations([1,2,3])
 
-        
+                    
+                                    -- in insert(1,[2,3,4])
+
+            -- in concatMap(\x -> [x * 2], [1,2,3])
+
+testL = [[1]]
+-- permutations :: [a] -> [[a]]
+-- permutations [] = [[]]
+-- permutations (x:xs) = concatMap (insert x) (permutations xs)
+
+-- insert :: a -> [a] -> [[a]] 
+-- insert x [] = [[x]]
+-- insert x (y:ys) = (x:y:ys) : map (y:) (insert x ys)

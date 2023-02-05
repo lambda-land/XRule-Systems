@@ -1,7 +1,7 @@
 module Lang where
 import Data.List (intercalate)
 
-data Val = N Int | B Bool | S String | C Char | L [Val] | L' List | Abs OVar Expr Type | Err deriving Eq
+data Val = N Int | B Bool | S String | C Char | L' [Val] | Abs OVar Expr Type | Err deriving Eq
 
 type TVar = String
 type OVar = String 
@@ -26,11 +26,12 @@ data Expr = Lit Val
           | App Expr Expr
           | Case Expr [(Pat, Expr)]   
           | If Expr Expr Expr 
+          | L [Expr]
           deriving Eq
 
 
 -- data BinOp = Add | Mul | Sub | Div | Eq | LEq | LE deriving Eq
-data BinOp = Add | Mul | Sub | Div | Eq | LEq | LE | Or | And | GEq | NEq  deriving Eq
+data BinOp = Add | Mul | Sub | Div | Eq | LEq | LE | Or | And | GEq | NEq | Append  deriving Eq
 
 
 
@@ -39,7 +40,8 @@ data BinOp = Add | Mul | Sub | Div | Eq | LEq | LE | Or | And | GEq | NEq  deriv
 instance Show Val where
   show (N n) = show n
   show (B b) = show b
-  show (L vs) = show vs
+  show (S s) = show s
+  show (C c) = show c
   show (Abs x e t) = "(\\" ++ x ++ " -> " ++ show e -- ++ " :: " ++ show t ++ ")"
   show (L' l) = show l
   show Err = "err"
@@ -56,6 +58,7 @@ instance Show List where
 instance Show Expr where
   show (Lit v) = show v
   show (Var x) = x
+  show (L vs) = show vs
   show (Let x e1 e2) = "let " ++ x ++ " = " ++ show e1 ++ " in " ++ show e2 
   show (LetRec x e1 e2) = "rec " ++ x ++ " = " ++ show e1 ++ " in " ++ show e2 
   show (Op e1 op e2) = show e1 ++ " " ++ show op ++ " " ++ show e2 
@@ -73,4 +76,5 @@ instance Show BinOp where
   show Eq = "=="
   show LEq = "<=" 
   show LE = "<"
+  show Append = "++"
 
