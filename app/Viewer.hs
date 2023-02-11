@@ -9,6 +9,7 @@ import Proof
 import ProofDisplay
 -- import XRefine
 import ExampleSystems
+import Parser
 
 p1 = head $ proofs (LTJ 2 6)
 
@@ -109,10 +110,12 @@ input = do
 -- loop s = do
 --     putStr $ render s
 
-main' :: IO ()
-main' = do
+main' :: String -> IO ()
+main' en = do
+    mapM_ putStr $ map (const " ") [1..10]
     -- putStr "\x1B[A"
-    let j = (EvalJ [] e1 (eval [] e1)) -- AddI 9 2 11-- Many [] [LD 3,DUP,ADD,DUP,LD 2,SWAP,ADD,DUP,LD 10,LD 4,ADD,SWAP,ADD] [22,8,6] -- LTJ 2 100
+    e <- getExampleFromFile' en
+    let j = (EvalJ [] e (eval [] e)) -- AddI 9 2 11-- Many [] [LD 3,DUP,ADD,DUP,LD 2,SWAP,ADD,DUP,LD 10,LD 4,ADD,SWAP,ADD] [22,8,6] -- LTJ 2 100
     let p = head $ proofs j-- head $ drop 1 $ proofs j
     let vs = ViewState { seen = Node j [], current = [], full = p }
     main'' $ execState (put vs >> expand) vs
@@ -158,4 +161,4 @@ getKey = reverse <$> getKey' ""
 --       "\DEL"   -> putStr "⎋"
 --       _        -> return ()
 --     main
-main = main'
+main = main' "minFold"

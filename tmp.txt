@@ -1,0 +1,16 @@
+minFold = letrec fold = \f acc xs ->
+            case xs == [] of
+                True -> acc
+                False -> f(head(xs),fold(f,acc,tail(xs)))
+            in let min = \x y -> case x < y of
+                    True -> x
+                    False -> y
+                in fold(min,9999,[])
+
+fold min 9999 [] => 9999
+
+fold min 9999 => \xs -> case xs == [] of { True -> 9999; False -> min(head(xs),fold(min,9999,tail(xs))) }
+[] => []
+
+
+if xs == [] ? 9999 : (λ x y -> if x <= y ? x : y) (head xs) ((λ f acc xs -> if xs == [] ? acc : f (head xs) ((λ f acc xs -> if xs == [] ? acc : f (head xs) (fold f acc (tail xs))) f acc (tail xs))) (λ x y -> if x <= y ? x : y) 9999 (tail xs)) => 9999

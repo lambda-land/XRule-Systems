@@ -44,6 +44,7 @@ eval env x = case x of
     Var x               -> case lookup x env of { Just y -> y; _ -> error $ x ++ " -| " ++ show env }-- fromJust (lookup x env)
     Let v e e'          -> eval ((v,eval env e):env) e'
     LetRec v (Lit e) e' -> eval ((v,e):env) e'
+    -- TODO LetRec v (Lit (Abs x e t)) e' -> eval ((v,e):env) e'
     Op lhs op rhs       -> evalOp op (eval env lhs) (eval env rhs)
     L es                -> L' (map (eval env) es)
     -- App (App (Var "cons") e) e' -> L' (Cons (eval env e) (eval env e'))
@@ -89,14 +90,29 @@ evalOp op v1 v2 = case (op,v1,v2) of
 
 
 
-
 data EvalJ = EvalJ Env Expr Val deriving Eq
+
+-- instance Show EvalJ where
+--   show (EvalJ rho e v) 
+--     -- | length rho > 1 = (show (take 1 rho)) ++ "..." ++ rest 
+--     | otherwise      = "{ " ++ showEnv rho ++ "}" ++ rest
+--     where rest = " |- " ++  show e ++ " => " ++ show v
+--           showEnv [] = ""
+--           showEnv ((x,v):rho) = (x ++ " |-> " ++ "...,") ++ showEnv rho
+
 
 instance Show EvalJ where
   show (EvalJ rho e v) 
-    | length rho > 1 = (show (take 1 rho)) ++ "..." ++ rest 
-    | otherwise      = show rho ++ rest
-    where rest = " |- " ++  show e ++ " => " ++ show v
+    | show e == show v = showContext rho ++ rest -- "..."
+    | length rho > 1 = showContext rho ++ rest -- "..." ++ rest  -- (show (take 1 rho)) ++ "..." ++ rest 
+    | otherwise      = showContext rho ++ rest -- "..." ++ rest -- show rho ++ rest
+    where rest = " : " ++  show e ++ " => " ++ show v
+
+showContext :: Env -> String
+showContext e = "{ " ++ (intercalate ", " $ map (\(x,y) ->  x ++ " |-> " ++ showVal y) e) ++ " }"
+    where showVal (Abs x e t) = "..."
+          showVal v = show v
+
 
 explain :: EvalJ -> [[EvalJ]]
 explain (EvalJ rho e v) = case e of
@@ -128,10 +144,18 @@ explain (EvalJ rho e v) = case e of
     -- App (Var "tail") e1    -> let (L' (Cons e1' e1's)) = eval rho e1
     --                           in [[EvalJ rho e1 (L' (Cons e1' e1's))]]
 
+    -- App (Lit (Abs x e1 t)) e2    -> let v' = eval rho e2
+    --                           in [[EvalJ rho e2 v', EvalJ ((x,v'):rho) e1 v]]
     App f e1               -> let Abs x e2 t = eval rho f 
                                   v'         = eval rho e1 
-                              --in [EvalJ rho f (Abs x e2 t), EvalJ rho e1 v', J ((x,v'):rho) e2 v]
+                              -- in [EvalJ rho f (Abs x e2 t), EvalJ rho e1 v', J ((x,v'):rho) e2 v]
                               in [[EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
+
+{--
+rho : e1 => \x -> e3           rho : e2 => v'            rho[x -> v'] : e3 => v
+--------------------------------------------------------------------------------------------
+rho : e1 e2 => v
+--}
 
     Op (Lit (N n)) op (Lit (N m)) -> [[EvalJ rho (Lit (N n)) (N n), EvalJ rho (Lit (N m)) (N m)]]
     Op (Lit v1) op (Lit v2)-> if v == evalOp op v1 v2 then [[]] else []

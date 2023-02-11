@@ -1,7 +1,13 @@
 module Lang where
 import Data.List (intercalate)
 
-data Val = N Int | B Bool | S String | C Char | L' [Val] | Abs OVar Expr Type | Err deriving Eq
+data Val = N Int
+  | B Bool 
+  | S String 
+  | C Char 
+  | L' [Val] 
+  | Abs OVar Expr Type 
+  | Err deriving Eq
 
 type TVar = String
 type OVar = String 
@@ -36,7 +42,7 @@ data BinOp = Add | Mul | Sub | Div | Eq | LEq | LE | Or | And | GEq | NEq | Appe
 
 
 {--     Show Definitions     --}
-
+{--
 instance Show Val where
   show (N n) = show n
   show (B b) = show b
@@ -45,6 +51,22 @@ instance Show Val where
   show (Abs x e t) = "(\\" ++ x ++ " -> " ++ show e -- ++ " :: " ++ show t ++ ")"
   show (L' l) = show l
   show Err = "err"
+--}
+instance Show Val where
+  show (N n) = show n
+  show (B b) = show b
+  show (S s) = show s
+  show (C c) = show c
+  show ae@(Abs x e t) = let (e',vs) = collectVars ae 
+                        in "(λ " ++ intercalate " " vs ++ " -> " ++ show e' ++ ")"
+
+    --  "(\" ++ x ++ " -> " ++ show e -- ++ " :: " ++ show t ++ ")"
+  show (L' l) = show l
+  show Err = "err"
+
+collectVars :: Val -> (Expr, [OVar])
+collectVars(Abs x (Lit a@(Abs _ _ _)) t) = (e1, x:xs) where (e1, xs) = collectVars a 
+collectVars (Abs x e t) = (e,[x])
 
 instance Show Pat where
   show (PVal v) = show v
@@ -62,11 +84,16 @@ instance Show Expr where
   show (Let x e1 e2) = "let " ++ x ++ " = " ++ show e1 ++ " in " ++ show e2 
   show (LetRec x e1 e2) = "rec " ++ x ++ " = " ++ show e1 ++ " in " ++ show e2 
   show (Op e1 op e2) = show e1 ++ " " ++ show op ++ " " ++ show e2 
+  -- show (App (App (Var "cons") e1) e2) = show e1 ++ " : " ++ show e2
+  -- show (App e1 (Lit v)) =  show e1 ++ " " ++  show v 
+  -- show (App e1 e2) =  show e1 ++ "(" ++ show e2 ++ ")"
   show (App (App (Var "cons") e1) e2) = show e1 ++ " : " ++ show e2
   show (App e1 (Lit v)) =  show e1 ++ " " ++  show v 
-  show (App e1 e2) =  show e1 ++ "(" ++ show e2 ++ ")"
+  show (App e1 (Var v)) =  show e1 ++ " " ++  v 
+  show (App e1 (L v))   =  show e1 ++ " " ++  show v 
+  show (App e1 e2) =  show e1 ++ " (" ++ show e2 ++ ")"
   show (Case e ps) = "(case " ++ show e ++ " of " ++ intercalate " | " (map show ps) ++ ")"
-  show (If e1 e2 e3) = "if " ++ show e1 ++ " then " ++ show e2 ++ " else " ++ show e3 ++ ""
+  show (If e1 e2 e3) = "if " ++ show e1 ++ " ? " ++ show e2 ++ " : " ++ show e3 ++ ""
 
 
 instance Show BinOp where

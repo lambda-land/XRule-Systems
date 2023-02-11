@@ -42,6 +42,10 @@ lenEx = letrec length = \xs ->
                 False -> 1 + length(tail(xs))
         in length([1,2,3,4,5])
 
+-- length [2,3,4,5] => 4
+-- ...
+-- length [1,2,3,4,5] => 5
+
 min = letrec length = \xs ->
             case xs == [] of
                 True -> 0
@@ -54,19 +58,47 @@ min = letrec length = \xs ->
                     False -> case head(xs) < head(tail(xs)) of
                         True -> minimum (head(xs):tail(tail(xs)))
                         False -> minimum (tail(xs))
-        in minimum([1,2,3,4,5])
+        in minimum([2,3,4,1,5])
+
+min2 = letrec length = \xs ->
+            case xs == [] of
+                True -> 0
+                False -> 1 + length(tail(xs))
+        in letrec minimum = \xs ->
+            case xs == [] of
+                True -> 0
+                False -> case length(xs) == 1 of
+                    True -> head(xs)
+                    False -> let h = head(xs) in let m = minimum(tail(xs)) in 
+                            case h < m of
+                                True -> h
+                                False -> m
+        in minimum([2,3,4,1,5])
+
+-- minimum [3,4,1,5] => 1
+-- 1 < 2 => True
+-- minimum [2,3,4,1,5] => 1
 
 paramTest = letrec reverse = \xs ->
                 case xs == [] of
                     True -> []
                     False -> reverse(tail(xs)) ++ [head(xs)]
-            in reverse([1])
+            in reverse([1,2,3])
+
+
+-- reverse [2,3] => [3,2]
+-- reverse [1,2,3] => [3,2,1]
 
 map = letrec map = \f xs ->
             case xs == [] of
                 True -> []
                 False -> f(head(xs)) : map(f,tail(xs))
-        in map(\x -> x + 1,[1])
+        in map(\x -> x + 1,[1,2,3])
+
+-- map (\x -> x + 1) [2,3] => [3,4]
+-- (\x -> x + 1) 1 => 2
+-- map (\x -> x + 1) [1,2,3] => [2,3,4]
+
 
 fold = letrec fold = \f acc xs ->
             case xs == [] of
@@ -81,9 +113,23 @@ minFold = letrec fold = \f acc xs ->
             in let min = \x y -> case x < y of
                     True -> x
                     False -> y
-                in fold(min,9999,[1,2,3,4,5])
+                in fold(min,9999,[1,2,3,4])
+                    --fold(min,9999,[1])
 
 
+min = letrec length = \xs ->
+            case xs == [] of
+                True -> 0
+                False -> 1 + length(tail(xs))
+        in letrec minimum = \xs ->
+            case xs == [] of
+                True -> 0
+                False -> case length(xs) == 1 of
+                    True -> head(xs)
+                    False -> case head(xs) < head(tail(xs)) of
+                        True -> minimum (head(xs):tail(tail(xs)))
+                        False -> minimum (tail(xs))
+        in minimum([1,2,3,4,5])
 
 listT = 1 : [2,3]
 
