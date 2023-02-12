@@ -110,7 +110,7 @@ instance Show EvalJ where
 
 showContext :: Env -> String
 showContext e = "{ " ++ (intercalate ", " $ map (\(x,y) ->  x ++ " |-> " ++ showVal y) e) ++ " }"
-    where showVal (Abs x e t) = "..."
+    where -- showVal (Abs x e t) = "..."
           showVal v = show v
 
 
@@ -149,12 +149,16 @@ explain (EvalJ rho e v) = case e of
     App f e1               -> let Abs x e2 t = eval rho f 
                                   v'         = eval rho e1 
                               -- in [EvalJ rho f (Abs x e2 t), EvalJ rho e1 v', J ((x,v'):rho) e2 v]
-                              in [[EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
+                            --   in [[EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
+                              in [[EvalJ rho f (Abs x e2 t), EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
 
 {--
 rho : e1 => \x -> e3           rho : e2 => v'            rho[x -> v'] : e3 => v
 --------------------------------------------------------------------------------------------
 rho : e1 e2 => v
+--}
+{--
+rho : \x -> e => 
 --}
 
     Op (Lit (N n)) op (Lit (N m)) -> [[EvalJ rho (Lit (N n)) (N n), EvalJ rho (Lit (N m)) (N m)]]

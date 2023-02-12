@@ -217,3 +217,9 @@ testL = 2:[[1]]
 -- insert :: a -> [a] -> [[a]] 
 -- insert x [] = [[x]]
 -- insert x (y:ys) = (x:y:ys) : map (y:) (insert x ys)
+
+
+scope = 
+    let x = 1 in 
+        letrec inc = \y -> x + y in
+            let x = 6 in inc(5) -- > 11
