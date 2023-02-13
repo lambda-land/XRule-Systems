@@ -19,7 +19,7 @@ replace bound env expr = case expr of
     Var x             -> case not (elem x bound) of
                              True -> case lookup x env of
                                  Just v  -> Lit v
-                                 Nothing -> error $ "Variable '" ++ x ++ "' is has not been bound." -- Var x
+                                 Nothing -> Var x-- error $ "Variable '" ++ x ++ "' is has not been bound." -- Var x
                              False -> Var x
   
     Let x e1 e2       -> Let x (replace bound env e1) (replace (x:bound) env e2)
@@ -34,16 +34,34 @@ replace bound env expr = case expr of
     _ -> expr -- error $ show expr
 
 
+capture :: [(OVar,Maybe Val)] -> Expr -> Expr
+capture env expr = case expr of 
+    Var x             -> case lookup x env of
+                             Just (Just v) -> Lit v
+                             _ -> Var x
+    Let x e1 e2       -> Let x (capture env e1) (capture ((x,Nothing):env) e2)
+    LetRec x e1 e2    -> LetRec x (capture env e1) (capture ((x,Nothing):env) e2)
+    Lit (Abs x e t)   -> Lit (Abs x (capture ((x,Nothing):env) e) t)
+    Lit v             -> Lit v
+    App e1 e2         -> App (capture env e1) (capture env e2)
+    Op e1 op e2       -> Op (capture env e1) op (capture env e2)
+    Case e cases      -> Case (capture env e) (map (\(p,e) -> (p,capture env e)) cases)
+    If e1 e2 e3       -> If (capture env e1) (capture env e2) (capture env e3)
+    L es -> L (map (capture env) es)
+    _ -> error $ show expr
+
+captureEnv :: Env -> Expr -> Expr
+captureEnv env e = capture (map (\(x,v) -> (x,Just v)) env) e
 
 eval :: Env -> Expr -> Val
 eval env x = case x of 
     Lit (S s)           -> eval env $ L (map (Lit . C) s)
     Lit (L' l)          -> L' l
-    Lit (Abs v e t)     -> (Abs v (replace [v] env e) t) 
+    Lit (Abs v e t)     -> let env' = map (\(a,b) -> (a,Just b)) env in Abs v (capture ((v,Nothing):env') e) t -- (Abs v (replace [v] env e) t) 
     Lit v               -> v 
     Var x               -> case lookup x env of { Just y -> y; _ -> error $ x ++ " -| " ++ show env }-- fromJust (lookup x env)
     Let v e e'          -> eval ((v,eval env e):env) e'
-    LetRec v (Lit e) e' -> eval ((v,e):env) e'
+    LetRec v e e'       -> let Lit e'' = captureEnv env e in eval ((v,e''):env) e'
     -- TODO LetRec v (Lit (Abs x e t)) e' -> eval ((v,e):env) e'
     Op lhs op rhs       -> evalOp op (eval env lhs) (eval env rhs)
     L es                -> L' (map (eval env) es)
@@ -126,10 +144,23 @@ explain (EvalJ rho e v) = case e of
 
     Let x e1 e2            -> let v1 = eval rho e1 
                               in [[EvalJ rho e1 v1, EvalJ ((x,v1):rho) e2 v]]
-
-    LetRec x (Lit xv) e2   -> case lookup x rho of 
-                                  Nothing -> [[EvalJ ((x,xv):rho) e2 v]] 
-                                  _       -> [[EvalJ rho e2 v]]
+{--
+rho : e1 => v'                 rho[x |-> v'] : e2 => v
+--------------------------------------------------------------------------------------------
+rho : let x = e1 in e2 => v
+--}
+    -- LetRec x (Lit xv) e2   -> case lookup x rho of 
+    --                               Nothing -> [[EvalJ ((x,xv):rho) e2 v]] 
+    --                               _       -> [[EvalJ rho e2 v]]
+    -- LetRec x e1 e2        -> let (Abs _ (Lit v') t) = eval rho (Lit $ Abs x e1 (TVar "a"))
+    --                          in [[EvalJ rho (Lit (Abs x e1 (TVar "a"))) (Abs x (Lit v') t), EvalJ ((x,v'):rho) e2 v]]
+    LetRec x e1 e2        -> let e' = captureEnv rho e1
+                                in [[EvalJ rho e1 (eval rho e'), EvalJ ((x,eval rho e'):rho) e2 v]]
+{--
+rho : \x -> e1 => \x -> v'      rho[x |-> v'] : e2 => v
+--------------------------------------------------------------------------------------------
+rho : let rec x = e1 in e2 => v
+--}
     App (App (Var "cons") e1) e2 -> [[EvalJ rho e1 (eval rho e1), EvalJ rho e2 (eval rho e2)]]
     App (Var "head") e1    -> let (L' (e1':e1's)) = eval rho e1
                               in [[EvalJ rho e1 (L' (e1':e1's))]]
@@ -161,7 +192,7 @@ rho : e1 e2 => v
     -- Lit (Abs x e1 t)       -> [[EvalJ rho e1 (Abs x e1 t)]]
 
 {--
-rho : e ~> e'
+rho,{x} : e ~> e'
 --------------------------------------------------------------------------------------------
 rho : \x -> e => \x -> e'
 --}
@@ -208,9 +239,9 @@ rho : let x = e in e' => v
                                   -- _       -> error "not a boolean" 
     -- L es -> concatMap explain [ EvalJ rho e (eval rho e) | e <- es]
 
-    e                      -> let e' = replace [] rho e
+    e                      -> let e' = captureEnv rho e
                                   v' = eval rho e'
-                              in if v == v' then [[EvalJ rho e' v']] else error $ show (e,e',v,v')
+                              in if v == v' then [[EvalJ rho e' v']] else error $ "\n\n"++ intercalate "\n" [show e, show e', show v,show v']
 {--
 rho : e ~> e'           rho : e' => v
 --------------------------------------------------------------------------------------------

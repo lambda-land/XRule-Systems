@@ -8,7 +8,7 @@ headEx = head([1,2,3])
 exmp5 = letrec fac = \x -> case x == 0  of
                 True   -> 1
                 False  -> x * fac (x - 1)
-        in fac(5)
+        in fac(2)
 
 minf = letrec min = \x y -> case x < y of
                     True -> x
@@ -221,5 +221,11 @@ testL = 2:[[1]]
 
 scope = 
     let x = 1 in 
-        let inc = \y -> x + y in
-            let x = 6 in inc(5) -- > 11
+        letrec inc = \y -> x + y in
+            letrec ss = \z -> inc(inc(z)) in
+                let x = 6 in ss(5)
+
+scope2 = 
+    let x = 1 in 
+        letrec inc = \y -> x + y in
+            let x = 6 in inc(x) -- > 7
