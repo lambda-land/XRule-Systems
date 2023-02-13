@@ -224,6 +224,10 @@ scope =
         letrec inc = \y -> x + y in
             letrec ss = \z -> inc(inc(z)) in
                 let x = 6 in ss(5)
+scope3 = letrec fib = \n -> case n == 1 of
+                    True -> 1
+                    False -> fib(n-1) + fib(n-2)
+            in fib
 
 scope2 = 
     let x = 1 in 

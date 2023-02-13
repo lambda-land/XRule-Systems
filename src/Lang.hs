@@ -1,13 +1,18 @@
 module Lang where
 import Data.List (intercalate)
 
+type Env = [(OVar,Val)]
+
 data Val = N Int
   | B Bool 
   | S String 
   | C Char 
   | L' [Val] 
   | Abs OVar Expr Type 
-  | Err deriving Eq
+  | Err 
+  | Clo Env OVar Expr
+  | Thunk Env Expr
+  deriving Eq
 
 type TVar = String
 type OVar = String 
@@ -63,6 +68,8 @@ instance Show Val where
     --  "(\" ++ x ++ " -> " ++ show e -- ++ " :: " ++ show t ++ ")"
   show (L' l) = show l
   show Err = "err"
+  show (Clo env x e) = "(fun " ++ x ++ " -> " ++ show e ++ ")"
+  show (Thunk env e) = "(thunk " ++ show e ++ ")"
 
 collectVars :: Val -> (Expr, [OVar])
 collectVars(Abs x (Lit a@(Abs _ _ _)) t) = (e1, x:xs) where (e1, xs) = collectVars a 

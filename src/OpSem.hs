@@ -8,7 +8,7 @@ import Proof
 import ProofDisplay
 import ErrorHandler (safeCatch)
 
-type Env = [(OVar,Val)]
+
 
 replace :: [OVar] -> Env -> Expr -> Expr
 replace bound env expr = case expr of
@@ -57,11 +57,15 @@ eval :: Env -> Expr -> Val
 eval env x = case x of 
     Lit (S s)           -> eval env $ L (map (Lit . C) s)
     Lit (L' l)          -> L' l
-    Lit (Abs v e t)     -> let env' = map (\(a,b) -> (a,Just b)) env in Abs v (capture ((v,Nothing):env') e) t -- (Abs v (replace [v] env e) t) 
+    Lit (Abs v e t)     -> Clo env v e -- let env' = map (\(a,b) -> (a,Just b)) env in Abs v (capture ((v,Nothing):env') e) t -- (Abs v (replace [v] env e) t) 
+    -- Lit (Clo env' v e)  -> eval env' e
+    Lit (Thunk env' e)  -> eval (env'++env) e
     Lit v               -> v 
-    Var x               -> case lookup x env of { Just y -> y; _ -> error $ x ++ " -| " ++ show env }-- fromJust (lookup x env)
+    Var x               -> eval env $ Lit $ case lookup x env of { Just y -> y; _ -> error $ x ++ " -| " ++ show env }-- fromJust (lookup x env)
     Let v e e'          -> eval ((v,eval env e):env) e'
-    LetRec v e e'       -> let Lit e'' = captureEnv env e in eval ((v,e''):env) e'
+    LetRec v e e'       -> let env' = (v,Thunk env' e):env in eval env' e'  
+                            -- let env' = (v,eval env' e):env in eval env' e'          -- Works!  
+    --  eval ((v,Thunk ):env) e'-- let Lit e'' = captureEnv env e in eval ((v,e''):env) e'
     -- TODO LetRec v (Lit (Abs x e t)) e' -> eval ((v,e):env) e'
     Op lhs op rhs       -> evalOp op (eval env lhs) (eval env rhs)
     L es                -> L' (map (eval env) es)
@@ -75,8 +79,8 @@ eval env x = case x of
 
     -- App (Var "tail") e  -> let (L' (Cons _ vs)) = eval env e in L' vs
     App e e'            -> case eval env e of 
-                              Abs v e'' t -> eval ((v,eval env e'):env) e''
-                              otherwise   -> Err
+                              Clo env' v e'' -> eval ((v,(eval env e')):env') e''-- Abs v e'' t -> eval ((v,eval env e'):env) e''
+                              a   -> error $ show $ (env,x,a)
 
     Case e cases        -> case eval env e of 
                               v -> case lookup (PVal v) cases of 
@@ -154,8 +158,17 @@ rho : let x = e1 in e2 => v
     --                               _       -> [[EvalJ rho e2 v]]
     -- LetRec x e1 e2        -> let (Abs _ (Lit v') t) = eval rho (Lit $ Abs x e1 (TVar "a"))
     --                          in [[EvalJ rho (Lit (Abs x e1 (TVar "a"))) (Abs x (Lit v') t), EvalJ ((x,v'):rho) e2 v]]
-    LetRec x e1 e2        -> let e' = captureEnv rho e1
-                                in [[EvalJ rho e1 (eval rho e'), EvalJ ((x,eval rho e'):rho) e2 v]]
+
+    -- LetRec x e1 e2        -> let e' = captureEnv rho e1
+    --                             in [[EvalJ rho e1 (eval rho e'), EvalJ ((x,eval rho e'):rho) e2 v]]   
+
+
+    LetRec x e1 e2        -> let env' = (x,Thunk rho e1):rho
+                                in [[EvalJ env' e1 (Thunk env' e1), EvalJ env' e2 v]] --------------------
+
+
+    -- LetRec v e e'       -> eval ((v,Clo env v e):env) e'-- let Lit e'' = captureEnv env e in eval ((v,e''):env) e'
+
 {--
 rho : \x -> e1 => \x -> v'      rho[x |-> v'] : e2 => v
 --------------------------------------------------------------------------------------------
@@ -177,11 +190,16 @@ rho : let rec x = e1 in e2 => v
 
     -- App (Lit (Abs x e1 t)) e2    -> let v' = eval rho e2
     --                           in [[EvalJ rho e2 v', EvalJ ((x,v'):rho) e1 v]]
-    App f e1               -> let Abs x e2 t = eval rho f 
+    App f e1               -> let Clo env x e2 = eval rho f 
                                   v'         = eval rho e1 
-                              -- in [EvalJ rho f (Abs x e2 t), EvalJ rho e1 v', J ((x,v'):rho) e2 v]
-                            --   in [[EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
-                              in [[EvalJ rho f (Abs x e2 t), EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
+                            -- in [EvalJ rho f (Abs x e2 t), EvalJ rho e1 v', J ((x,v'):rho) e2 v]
+                        --   in [[EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
+                                in [[EvalJ rho f (Clo env x e2), EvalJ rho e1 v', EvalJ ((x,v'):env) e2 v]]
+    -- App f e1               -> let Abs x e2 t = eval rho f 
+    --                               v'         = eval rho e1 
+    --                           -- in [EvalJ rho f (Abs x e2 t), EvalJ rho e1 v', J ((x,v'):rho) e2 v]
+    --                         --   in [[EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
+    --                           in [[EvalJ rho f (Abs x e2 t), EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
 
 {--
 rho : e1 => \x -> e3           rho : e2 => v'            rho[x -> v'] : e3 => v
@@ -239,9 +257,9 @@ rho : let x = e in e' => v
                                   -- _       -> error "not a boolean" 
     -- L es -> concatMap explain [ EvalJ rho e (eval rho e) | e <- es]
 
-    e                      -> let e' = captureEnv rho e
-                                  v' = eval rho e'
-                              in if v == v' then [[EvalJ rho e' v']] else error $ "\n\n"++ intercalate "\n" [show e, show e', show v,show v']
+    e                      -> let -- e' = captureEnv rho e
+                                  v' = eval rho e
+                              in if show v == show v' then [[EvalJ rho e v']] else error $ "\n\n"++ intercalate "\n" [show e, show v,show v']
 {--
 rho : e ~> e'           rho : e' => v
 --------------------------------------------------------------------------------------------
