@@ -55,14 +55,16 @@ instance Latex Val where
   latex (B b) = show b
   latex (S s) = show s
   latex (C c) = show c
-  latex ae@(Abs x e t) = let (e',vs) = collectVars ae 
-                             vs' = vs -- map latex vs
-                             e'' = latex e'
-                         in "$\\lambda$ " ++ intercalate "," vs' ++ " -> " ++ e'' ++ ""
+  latex (Abs _ _ _) = "\\lambda\\vdots"
+  -- latex ae@(Abs x e t) = let (e',vs) = collectVars ae 
+  --                            vs' = vs -- map latex vs
+  --                            e'' = latex e'
+  --                        in "$\\lambda$ " ++ intercalate "," vs' ++ " -> " ++ e'' ++ ""
   latex (L' l) = "[" ++ intercalate "," (map latex l) ++ "]"
   latex Err = "err"
 
 instance Latex Expr where
+  -- latex (Lit (Abs _ _ _)) = "\\lambda\\vdots"
   latex (Lit v) = latex v
   latex (Var x) = x
   latex (Let x e1 e2) = "let " ++ x ++ " = " ++ latex e1 ++ " in " ++ latex e2
@@ -70,12 +72,14 @@ instance Latex Expr where
   latex (Op e1 op e2) = latex e1 ++ latex op ++ latex e2
   -- latex (App e1 e2) = latex e1 ++ " " ++ latex e2
   latex (App (App (Var "cons") e1) e2) = latex e1 ++ " : " ++ latex e2
+  --- latex (App (Lit (Abs _ _ _)) _) = "\\vdots"
   latex (App e1 (Lit v)) =  latex e1 ++ " " ++  latex v 
   latex (App e1 (Var v)) =  latex e1 ++ " " ++  v 
   latex (App e1 (L v))   =  latex e1 ++ " " ++  latex (L v)
-  latex (App e1 e2) =  show e1 ++ " (" ++ show e2 ++ ")"
+  latex (App e1 e2) =  latex e1 ++ " (" ++ latex e2 ++ ")"
   latex (Case e pats) = "case " ++ latex e ++ " of " ++ "\\{ " ++ intercalate "; " (map (\(p,e') -> latex p ++ " -> " ++ latex e') pats) ++ " \\}"
-  latex (If e1 e2 e3) = "if " ++ latex e1 ++ " then " ++ latex e2 ++ " else " ++ latex e3
+  latex (If _ _ _) = "\\vdots"
+  -- latex (If e1 e2 e3) = "if " ++ latex e1 ++ " then " ++ latex e2 ++ " else " ++ latex e3
   latex (L es) = "[" ++ intercalate "," (map latex es) ++ "]"
 
 
@@ -102,7 +106,17 @@ instance Latex j => Latex (Proof j) where
   latex (Node j []) = latex j
   latex (Node j ps) = "\\infer[]{" ++ latex j ++ "}{" ++ intercalate " && " (map latex ps) ++ "}"
 
+
+isLambdaApp :: Expr -> Bool
+isLambdaApp (Lit (Abs _ _ _)) = True
+isLambdaApp (App (Lit (Abs _ _ _)) _) = True
+isLambdaApp (App e e') = isLambdaApp e || isLambdaApp e'
+isLambdaApp (Op e _ e') = isLambdaApp e || isLambdaApp e'
+isLambdaApp e = False
 instance Latex EvalJ where
 -- latex (EvalJ rho e v) = "\\{ \\ldots \\}" ++ " : " ++ "\\code{" ++ latex e ++ "}" ++ " \\Rightarrow " ++ "\\code{" ++ latex v ++ "}"
+  latex (EvalJ _ (App (Lit (Abs _ _ _)) _) _) = "\\vdots"
+  latex (EvalJ _ e _) | isLambdaApp e = "\\vdots"
+  latex (EvalJ _ (If _ _ _) _) = "\\vdots"
   latex (EvalJ rho e v) = "\\{ " ++ (intercalate " , " bnds) ++ " \\}" ++ " : " ++ "\\code{" ++ latex e ++ "}" ++ " \\Rightarrow " ++ "\\code{" ++ latex v ++ "}"
     where bnds = map (\(x,v) -> "\\code{" ++ x ++ "}" ++ " \\mapsto \\code{" ++ latex v ++ "}") $ shrink rho e

@@ -203,7 +203,9 @@ exmp2 = letrec map = \f xs ->
                         then [[]]
                         else concatMap(insert(head(xs)),permutations(tail(xs)))
                     in permutations([1,2,3])
-
+-- permutations [1,2,3] -> [...]
+-- permutations [2,3] -> [[2,3],[3,2]]
+-- concatMap (insert 1) [[2,3],[3,2]] -> [...]
 
                                     -- in insert(1,[2,3,4])
 
@@ -217,3 +219,8 @@ testL = 2:[[1]]
 -- insert :: a -> [a] -> [[a]] 
 -- insert x [] = [[x]]
 -- insert x (y:ys) = (x:y:ys) : map (y:) (insert x ys)
+
+
+-- [[inc-ibody],[x-1]]
+
+-- 

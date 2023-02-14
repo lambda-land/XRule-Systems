@@ -10,7 +10,7 @@ import Proof
 
 main :: IO ()
 main = do
-  e <- getExampleFromFile' "min2"
+  e <- getExampleFromFile' "paramTest"
   putStrLn $ latex e
   putStrLn $ latex $ (EvalJ [] e (eval [] e))
   let p = trace e
