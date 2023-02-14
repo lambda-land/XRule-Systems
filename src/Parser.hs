@@ -54,7 +54,7 @@ remove :: EvalJ -> Bool
 remove (EvalJ _ e v) | show e == show v = True
 remove (EvalJ _ (Var x) _) = True
 remove (EvalJ _ (Op (Lit (N _)) o (Lit (N _))) v) | o `elem` [Add,Mul,Sub,Div] = True
--- remove (EvalJ _ (Op _ o _) v) | o `elem` [Append] = True                           -- Sometimes useful
+remove (EvalJ _ (Op _ o _) v) | o `elem` [Append] = True                           -- Sometimes useful
 remove (EvalJ _ (App (Var x) _) _) | x `elem` ["tail","head"] = True
 remove _ = False
 
