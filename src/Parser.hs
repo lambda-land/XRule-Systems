@@ -54,17 +54,33 @@ remove :: EvalJ -> Bool
 remove (EvalJ _ e v) | show e == show v = True
 remove (EvalJ _ (Var x) _) = True
 remove (EvalJ _ (Op (Lit (N _)) o (Lit (N _))) v) | o `elem` [Add,Mul,Sub,Div] = True
-remove (EvalJ _ (Op _ o _) v) | o `elem` [Append] = True                           -- Sometimes useful
+-- remove (EvalJ _ (Op _ o _) v) | o `elem` [Append] = True                           -- Sometimes useful
 remove (EvalJ _ (App (Var x) _) _) | x `elem` ["tail","head"] = True
 remove _ = False
 
+containsIf :: Expr -> Bool
+containsIf (Let _ e e') = containsIf e || containsIf e'
+containsIf (LetRec _ e e') = containsIf e || containsIf e'
+containsIf (Op e _ e') = containsIf e || containsIf e'
+containsIf (App e e') = containsIf e || containsIf e'
+containsIf (If _ _ _) = True
+containsIf e = False
+
 filter1 :: Proof EvalJ -> Proof EvalJ
--- filter1 (Node (EvalJ rho (If e1 e2 e3) v) ((Node (EvalJ rho' e1' v') ps'):ps)) | e1 == e1' = Node ((EvalJ rho (If e1 e2 e3) v)) ((Node (EvalJ rho' e1' v') []):(map filter1 ps))
-filter1 (Node (EvalJ rho (If e1 e2 e3) v) ((Node (EvalJ rho' e1' v') ps'):ps)) | e1 == e1' = Node ((EvalJ rho (If e1 e2 e3) v)) (map filter1 ps)
+filter1 (Node (EvalJ rho (If e1 e2 e3) v) [Node (EvalJ rho' e1' v') ps',Node (EvalJ rho'' e2or3 v'') ps''])
+  | not (containsIf e2or3) = Node ((EvalJ rho (If e1 e2 e3) v)) [(Node (EvalJ rho' e1' v') []),Node (EvalJ rho'' e2or3 v'') ps'']
+  | otherwise = Node ((EvalJ rho (If e1 e2 e3) v)) [Node (EvalJ rho'' e2or3 v'') ps'']
+-- filter1 (Node (EvalJ rho (If e1 e2 e3) v) ((Node (EvalJ rho' e1' v') ps'):ps)) | e1 == e1' = Node ((EvalJ rho (If e1 e2 e3) v)) (map filter1 ps)
 filter1 (Node j ps) = Node j (map filter1 ps)
 
 prune :: Proof EvalJ -> Proof EvalJ
 prune (Node j js) = filter1 $ Node j $ map prune $ filter (not . remove . conclusion) js
+
+
+(~) :: EvalJ -> EvalJ -> Bool
+(~) (EvalJ _ e _) (EvalJ _ e' _) | e == e' = True
+                                 | (Op _ o _) <- e, (Op _ o' _) <- e', o == o' = True
+                                 | otherwise = False
 
 -- focus :: Expr -> String
 -- focus ()
@@ -112,8 +128,9 @@ findTarget p = case toThePoint p of
                 _ -> error "No target found"
               
 
-
 ex = (EvalJ [] (Lit (N 6)) (N 6))
+
+
 
 -- run = do
 --         let list = []
@@ -125,3 +142,10 @@ ex = (EvalJ [] (Lit (N 6)) (N 6))
 --         hClose handle
 -- f :: [String] -> [Int]
 -- f = map read
+
+
+-- class (Explain j,Functor f) => Easier j f where
+--   easier :: Proof j -> Proof (f j)
+
+-- instance Easier EvalJ Maybe where
+--   easier = toThePoint . prune

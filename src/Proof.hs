@@ -111,6 +111,19 @@ children :: Proof j -> [Proof j]
 children (Node _ ps) = ps
 
 
+countNodes :: Proof j -> Int
+countNodes (Node _ []) = 1
+countNodes (Node _ ps) = 1 + sum (map countNodes ps)
+
+
+getRow :: Int -> Proof j -> [j]
+getRow 0 (Node j _) = [j]
+getRow n (Node _ ps) = concatMap (getRow (n-1)) ps
+
+toList :: Eq j => Proof j -> [j]
+toList p = concat $ takeWhile (/=[]) [getRow n p | n <- [0..countNodes p - 1]]
+
+
 -- {} |- 1 + True :: Bool 
 -- {} |- (+) :: Int -> Bool -> Bool
 -- type OVar = String

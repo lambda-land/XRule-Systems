@@ -112,11 +112,22 @@ isLambdaApp (Lit (Abs _ _ _)) = True
 isLambdaApp (App (Lit (Abs _ _ _)) _) = True
 isLambdaApp (App e e') = isLambdaApp e || isLambdaApp e'
 isLambdaApp (Op e _ e') = isLambdaApp e || isLambdaApp e'
+isLambdaApp (Let _ e e') = isLambdaApp e || isLambdaApp e'
+isLambdaApp (LetRec _ e e') = isLambdaApp e || isLambdaApp e'
 isLambdaApp e = False
+
+
+
 instance Latex EvalJ where
 -- latex (EvalJ rho e v) = "\\{ \\ldots \\}" ++ " : " ++ "\\code{" ++ latex e ++ "}" ++ " \\Rightarrow " ++ "\\code{" ++ latex v ++ "}"
   latex (EvalJ _ (App (Lit (Abs _ _ _)) _) _) = "\\vdots"
-  latex (EvalJ _ e _) | isLambdaApp e = "\\vdots"
+  latex (EvalJ _ e _) | isLambdaApp e || containsIf e = "\\vdots"
   latex (EvalJ _ (If _ _ _) _) = "\\vdots"
   latex (EvalJ rho e v) = "\\{ " ++ (intercalate " , " bnds) ++ " \\}" ++ " : " ++ "\\code{" ++ latex e ++ "}" ++ " \\Rightarrow " ++ "\\code{" ++ latex v ++ "}"
     where bnds = map (\(x,v) -> "\\code{" ++ x ++ "}" ++ " \\mapsto \\code{" ++ latex v ++ "}") $ shrink rho e
+
+
+countNodes' :: Proof EvalJ -> Int
+countNodes' (Node j ps) | latex j == "\\vdots" = sum $ map countNodes' ps
+                        | otherwise = 1 + sum (map countNodes' ps)
+

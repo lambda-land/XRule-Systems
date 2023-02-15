@@ -7,3 +7,6 @@ import System.IO.Unsafe (unsafePerformIO)
 safeCatch :: a -> Maybe a
 safeCatch x = unsafePerformIO $ Exc.catch (x `seq` return (Just x)) handler
   where handler exc = return Nothing  `const`  (exc :: Exc.ErrorCall)
+
+pullOutIO :: IO a -> a
+pullOutIO x = unsafePerformIO x
