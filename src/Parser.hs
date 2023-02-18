@@ -46,6 +46,9 @@ parse s = case pSCPL (resolveLayout False $ myLexer s) of
             Left err -> Left err
             Right x  -> Right (transSCPL x)
 
+parseString :: String -> Expr
+parseString s = getBinding "expr" (parse $ "expr = " ++ s)
+
 j1 = EvalJ [] (Op (L []) Eq (L [])) (B True)
 
 
@@ -129,6 +132,11 @@ findTarget p = case toThePoint p of
               
 
 ex = (EvalJ [] (Lit (N 6)) (N 6))
+
+getSomeJs e = nubBy (~) $ toList pruned
+  where p = trace e
+        target = findTarget p
+        pruned = toThePoint $ prune $ assume target p
 
 
 

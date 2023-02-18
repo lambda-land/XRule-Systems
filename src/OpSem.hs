@@ -193,6 +193,21 @@ trace e = suppose (EvalJ [] e (eval [] e))
 traceProblems :: Expr -> Proof (Problem EvalJ)
 traceProblems e = nicerProblems $ suppose (EvalJ [] e (eval [] e))
 
+
+
+
+
+
+
+fillVars :: EvalJ -> EvalJ
+fillVars (EvalJ rho e v) = EvalJ rho e' v
+    where rho' = filter (\(x,y) -> case y of { Abs _ _ _ -> False; _ -> True }) rho
+          subs = map (\(x,v) -> (Var x) ~> (Lit v)) rho'
+          e' = foldr ($) e subs
+
+
+  
+
 -- data Val = N Int | B Bool | L [Val] | L' List | Abs OVar Expr Type | Err deriving Eq
 
 -- type TVar = String
