@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{proof}
+\usepackage{amssymb,amsmath}
+\usepackage{relsize}
+\usepackage[
+    % a0paper,
+    % landscape,
+    papersize={100in,20in},
+    margin={2in,2in}
+    %total={1800in, 10in},
+    ]{geometry}
+
+
+\def\code#1{\texttt{#1}}
+
+\title{Big Proof Trees}
+\author{Iain Moncrief}
+\date{February 2023}
+
+\begin{document}
+\relscale{0.1}
+
+\maketitle
+
+\section{Introduction}
+
+
+$$\infer[]{\{  \} : \code{minimum [2,3,4,1,5]} \Rightarrow \code{1}}{\infer[]{\vdots}{\infer[]{\vdots}{\infer[]{\vdots}{\{ \code{xs} \mapsto \code{[2,3,4,1,5]} \} : \code{head xs <= minimum (tail xs)} \Rightarrow \code{False} && \infer[]{\{ \code{xs} \mapsto \code{[2,3,4,1,5]} \} : \code{minimum (tail xs)} \Rightarrow \code{1}}{\infer[]{\vdots}{\infer[]{\vdots}{\infer[]{\vdots}{\{ \code{xs} \mapsto \code{[3,4,1,5]} \} : \code{head xs <= minimum (tail xs)} \Rightarrow \code{False} && \infer[]{\{ \code{xs} \mapsto \code{[3,4,1,5]} \} : \code{minimum (tail xs)} \Rightarrow \code{1}}{\infer[]{\vdots}{\infer[]{\vdots}{\infer[]{\vdots}{\{ \code{xs} \mapsto \code{[4,1,5]} \} : \code{head xs <= minimum (tail xs)} \Rightarrow \code{False} && \infer[]{\{ \code{xs} \mapsto \code{[4,1,5]} \} : \code{minimum (tail xs)} \Rightarrow \code{1}}{\infer[]{\vdots}{\infer[]{\vdots}{\infer[]{\vdots}{\infer[]{\{ \code{xs} \mapsto \code{[1,5]} \} : \code{head xs <= minimum (tail xs)} \Rightarrow \code{True}}{\infer[]{\{ \code{xs} \mapsto \code{[1,5]} \} : \code{minimum (tail xs)} \Rightarrow \code{5}}{\infer[]{\vdots}{\infer[]{\vdots}{\infer[]{\{ \code{xs} \mapsto \code{[5]} \} : \code{length xs == 1} \Rightarrow \code{True}}{\{ \code{xs} \mapsto \code{[5]} \} : \code{length xs} \Rightarrow \code{1} && \{  \} : \code{1 == 1} \Rightarrow \code{True}}}}} && \{  \} : \code{1 <= 5} \Rightarrow \code{True}}}}}}}}}}}}}}}}}}$$
+$$\{  \} : \code{minimum [2,3,4,1,5]} \Rightarrow \code{1}$$
+$$\{ \code{xs} \mapsto \code{[2,3,4,1,5]} \} : \code{head xs <= minimum (tail xs)} \Rightarrow \code{False}$$
+$$\{ \code{xs} \mapsto \code{[2,3,4,1,5]} \} : \code{minimum (tail xs)} \Rightarrow \code{1}$$
+$$\{ \code{xs} \mapsto \code{[5]} \} : \code{length xs == 1} \Rightarrow \code{True}$$
+$$\{ \code{xs} \mapsto \code{[5]} \} : \code{length xs} \Rightarrow \code{1}$$
+\end{document}

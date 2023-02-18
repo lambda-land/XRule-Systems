@@ -81,7 +81,8 @@ library
     build-depends:
         base ^>=4.17.0.0,
         mtl ^>=2.2.2,
-        array ^>= 0.5.4.0
+        array ^>= 0.5.4.0,
+        process,
 
     -- Directories containing source files.
     hs-source-dirs:
@@ -107,6 +108,7 @@ executable XRuleSystems
     -- Other library packages from which modules are imported.
     build-depends:
         base ^>=4.17.0.0,
+        process,
         xrs
 
     -- Directories containing source files.

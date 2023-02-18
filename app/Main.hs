@@ -6,7 +6,11 @@ import OpSem
 import Lang
 import Proof
 
-import Data.List (nubBy)
+import Data.List (nubBy, intercalate)
+
+
+import System.Process (callCommand)
+import System.IO (readFile, writeFile)
 
 main :: IO ()
 main = do
@@ -20,6 +24,14 @@ main = do
   let pruned = toThePoint $ prune $ assume target p
   print $ countNodes p
   print $ countNodes' pruned
-  putStrLn $ "$$" ++ latex pruned ++ "$$"
+
+  let texProof = "$$" ++ latex pruned ++ "$$"
   let jList = nubBy (~) $ toList pruned
-  mapM_ (\x -> putStrLn $ "$$" ++ x ++ "$$") $ filter (/="\\vdots") $ map latex jList
+  let texJs = map (\x -> "$$" ++ x ++ "$$") $ filter (/="\\vdots") $ map latex jList
+  let source = intercalate "\n" $ [texProof] ++ texJs
+
+  putStrLn source
+
+  contents <- readFile "tex/template.tex"
+  writeFile "tex/out.tex" $ contents ++ "\n" ++ source ++ "\n\\end{document}"
+  callCommand "pdflatex -output-directory=tex tex/out.tex"
