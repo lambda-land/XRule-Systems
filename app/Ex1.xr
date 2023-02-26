@@ -206,6 +206,7 @@ exmp2 = letrec map = \f xs ->
                         then [[]]
                         else concatMap(insert(head(xs)),permutations(tail(xs)))
                     in permutations([1,2,3])
+
 -- permutations [1,2,3] -> [...]
 -- permutations [2,3] -> [[2,3],[3,2]]
 -- concatMap (insert 1) [[2,3],[3,2]] -> [...]

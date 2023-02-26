@@ -1,12 +1,12 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.4.7)  18 FEB 2023 10:13
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.4.7)  26 FEB 2023 12:43
 entering extended mode
  restricted \write18 enabled.
+ file:line:error style messages enabled.
  %&-line parsing enabled.
-**tex/out.tex
-(./tex/out.tex
+**/Users/iainmoncrief/Documents/Github/XRule-Systems/tex/out.tex
+(/Users/iainmoncrief/Documents/Github/XRule-Systems/tex/out.tex
 LaTeX2e <2020-02-02> patch level 5
-L3 programming layer <2020-03-06>
-(/usr/local/texlive/2020/texmf-dist/tex/latex/base/article.cls
+L3 programming layer <2020-03-06> (/usr/local/texlive/2020/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2019/12/20 v1.4l Standard LaTeX document class
 (/usr/local/texlive/2020/texmf-dist/tex/latex/base/size10.clo
 File: size10.clo 2019/12/20 v1.4l Standard LaTeX file (size option)
@@ -22,8 +22,7 @@ File: size10.clo 2019/12/20 v1.4l Standard LaTeX file (size option)
 \abovecaptionskip=\skip47
 \belowcaptionskip=\skip48
 \bibindent=\dimen134
-)
-(/usr/local/texlive/2020/texmf-dist/tex/latex/lkproof/proof.sty
+) (/usr/local/texlive/2020/texmf-dist/tex/latex/lkproof/proof.sty
 \inferLineSkip=\dimen135
 \inferLabelSkip=\dimen136
 \@LeftOffset=\dimen137
@@ -47,11 +46,9 @@ File: size10.clo 2019/12/20 v1.4l Standard LaTeX file (size option)
 \@LowerPart=\box46
 \@LabelPart=\box47
 \ResultBox=\box48
-)
-(/usr/local/texlive/2020/texmf-dist/tex/latex/amsfonts/amssymb.sty
+) (/usr/local/texlive/2020/texmf-dist/tex/latex/amsfonts/amssymb.sty
 Package: amssymb 2013/01/14 v3.01 AMS font symbols
-
-(/usr/local/texlive/2020/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+ (/usr/local/texlive/2020/texmf-dist/tex/latex/amsfonts/amsfonts.sty
 Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 \@emptytoks=\toks15
 \symAMSa=\mathgroup4
@@ -59,25 +56,21 @@ Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
-))
-(/usr/local/texlive/2020/texmf-dist/tex/latex/amsmath/amsmath.sty
+)) (/usr/local/texlive/2020/texmf-dist/tex/latex/amsmath/amsmath.sty
 Package: amsmath 2020/01/20 v2.17e AMS math features
 \@mathmargin=\skip49
 
 For additional information on amsmath, use the `?' option.
 (/usr/local/texlive/2020/texmf-dist/tex/latex/amsmath/amstext.sty
 Package: amstext 2000/06/29 v2.01 AMS text
-
-(/usr/local/texlive/2020/texmf-dist/tex/latex/amsmath/amsgen.sty
+ (/usr/local/texlive/2020/texmf-dist/tex/latex/amsmath/amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0 generic functions
 \@emptytoks=\toks16
 \ex@=\dimen154
-))
-(/usr/local/texlive/2020/texmf-dist/tex/latex/amsmath/amsbsy.sty
+)) (/usr/local/texlive/2020/texmf-dist/tex/latex/amsmath/amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d Bold Symbols
 \pmbraise@=\dimen155
-)
-(/usr/local/texlive/2020/texmf-dist/tex/latex/amsmath/amsopn.sty
+) (/usr/local/texlive/2020/texmf-dist/tex/latex/amsmath/amsopn.sty
 Package: amsopn 2016/03/08 v2.02 operator names
 )
 \inf@bad=\count175
@@ -117,21 +110,16 @@ LaTeX Font Info:    Redeclaring font encoding OMS on input line 734.
 \mathdisplay@stack=\toks20
 LaTeX Info: Redefining \[ on input line 2859.
 LaTeX Info: Redefining \] on input line 2860.
-)
-(/usr/local/texlive/2020/texmf-dist/tex/latex/relsize/relsize.sty
+) (/usr/local/texlive/2020/texmf-dist/tex/latex/relsize/relsize.sty
 Package: relsize 2013/03/29 ver 4.1
-)
-(/usr/local/texlive/2020/texmf-dist/tex/latex/geometry/geometry.sty
+) (/usr/local/texlive/2020/texmf-dist/tex/latex/geometry/geometry.sty
 Package: geometry 2020/01/02 v5.9 Page Geometry
-
-(/usr/local/texlive/2020/texmf-dist/tex/latex/graphics/keyval.sty
+ (/usr/local/texlive/2020/texmf-dist/tex/latex/graphics/keyval.sty
 Package: keyval 2014/10/28 v1.15 key=value parser (DPC)
 \KV@toks@=\toks21
-)
-(/usr/local/texlive/2020/texmf-dist/tex/generic/iftex/ifvtex.sty
+) (/usr/local/texlive/2020/texmf-dist/tex/generic/iftex/ifvtex.sty
 Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
-
-(/usr/local/texlive/2020/texmf-dist/tex/generic/iftex/iftex.sty
+ (/usr/local/texlive/2020/texmf-dist/tex/generic/iftex/iftex.sty
 Package: iftex 2020/03/06 v1.0d TeX engine tests
 ))
 \Gm@cnth=\count187
@@ -146,13 +134,11 @@ Package: iftex 2020/03/06 v1.0d TeX engine tests
 \Gm@layouthoffset=\dimen169
 \Gm@layoutvoffset=\dimen170
 \Gm@dimlist=\toks22
-)
-(/usr/local/texlive/2020/texmf-dist/tex/latex/l3backend/l3backend-pdfmode.def
+) (/usr/local/texlive/2020/texmf-dist/tex/latex/l3backend/l3backend-pdfmode.def
 File: l3backend-pdfmode.def 2020-03-12 L3 backend support: PDF mode
 \l__kernel_color_stack_int=\count190
 \l__pdf_internal_box=\box51
-)
-(tex/out.aux)
+) (/Users/iainmoncrief/Documents/Github/XRule-Systems/tex/out.aux)
 \openout1 = `out.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 20.
@@ -209,35 +195,25 @@ Package relsize Warning: Font size 1.00006pt is too small.
 (relsize)                Using 5.0pt instead on input line 21.
 
 LaTeX Font Info:    Trying to load font information for U+msa on input line 23.
-
 (/usr/local/texlive/2020/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
 LaTeX Font Info:    Trying to load font information for U+msb on input line 23.
-
-
-(/usr/local/texlive/2020/texmf-dist/tex/latex/amsfonts/umsb.fd
+ (/usr/local/texlive/2020/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) [1
 
-{/usr/local/texlive/2020/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (tex/ou
-t.aux) ) 
+{/usr/local/texlive/2020/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (/Users/iainmoncrief/Documents/Github/XRule-Systems/tex/out.aux) ) 
 Here is how much of TeX's memory you used:
  2167 strings out of 480608
- 28272 string characters out of 5903631
- 273666 words of memory out of 5000000
+ 28729 string characters out of 5903631
+ 272666 words of memory out of 5000000
  18069 multiletter control sequences out of 15000+600000
  538700 words of font info for 49 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 34i,108n,71p,1448b,652s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx
-12.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10
-.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.p
-fb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb
-></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></
-usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb></us
-r/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
-Output written on tex/out.pdf (1 page, 58520 bytes).
+ 33i,107n,71p,1185b,630s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
+Output written on /Users/iainmoncrief/Documents/Github/XRule-Systems/tex/out.pdf (1 page, 56070 bytes).
 PDF statistics:
  36 PDF objects out of 1000 (max. 8388607)
  25 compressed objects within 1 object stream

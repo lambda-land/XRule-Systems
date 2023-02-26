@@ -131,3 +131,7 @@ countNodes' :: Proof EvalJ -> Int
 countNodes' (Node j ps) | latex j == "\\vdots" = sum $ map countNodes' ps
                         | otherwise = 1 + sum (map countNodes' ps)
 
+
+
+-- fillInVars :: Env -> Expr -> Expr
+-- fillInVars env (Var 

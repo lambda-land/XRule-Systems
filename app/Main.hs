@@ -14,14 +14,16 @@ import System.IO (readFile, writeFile)
 
 main :: IO ()
 main = do
-  e <- getExampleFromFile' "min2"
+  e <- getExampleFromFile' "lenEx"
   putStrLn $ latex e
   putStrLn $ latex $ (EvalJ [] e (eval [] e))
   let p = trace e
   let target = findTarget p
   -- print target
   -- print $ assume target p
-  let pruned = toThePoint $ prune $ assume target p
+
+  let pruned = toThePoint $ fillInTrivial $ prune $ assume target p
+  -- let pruned = toThePoint $ assume target p
   print $ countNodes p
   print $ countNodes' pruned
 

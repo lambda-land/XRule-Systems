@@ -19,7 +19,7 @@ replace bound env expr = case expr of
     Var x             -> case not (elem x bound) of
                              True -> case lookup x env of
                                  Just v  -> Lit v
-                                 Nothing -> error $ "Variable '" ++ x ++ "' is has not been bound." -- Var x
+                                 Nothing -> error $ "Variable '" ++ x ++ "' is has not been bound." ++ show expr -- Var x
                              False -> Var x
   
     Let x e1 e2       -> Let x (replace bound env e1) (replace (x:bound) env e2)
@@ -39,7 +39,7 @@ eval :: Env -> Expr -> Val
 eval env x = case x of 
     Lit (S s)           -> eval env $ L (map (Lit . C) s)
     Lit (L' l)          -> L' l
-    Lit (Abs v e t)     -> (Abs v (replace [v] env e) t) 
+    Lit (Abs v e t)     -> Abs v e t -- (Abs v (replace [v] env e) t) 
     Lit v               -> v 
     Var x               -> case lookup x env of { Just y -> y; _ -> error $ x ++ " -| " ++ show env }-- fromJust (lookup x env)
     Let v e e'          -> eval ((v,eval env e):env) e'
@@ -55,10 +55,32 @@ eval env x = case x of
     App (Var "head") e  -> let (L' (x:_)) = eval env e in x
     App (Var "tail") e  -> let (L' (_:xs)) = eval env e in L' xs
 
+
+{--
+e2 e3 => v'               e1 v' => v                              -- [v'/x]e1 => v
+------------------------------------------------------------------------App1
+e1 (e2 e3) => v
+--}
+    App e1 (App e2 e3) -> let v' = eval env (App e2 e3)
+                              v = eval env (App e1 (Lit v'))
+                          in v
+
+{--
+e1 => \x -> e3                [e2/x]e3 => v
+---------------------------------------------App2
+e1 e2 => v
+--}
+    App e1 e2 -> let (Abs x e3 t) = eval env e1
+                     e4 = (Var x ~> e2) e3
+                     v = eval env e4
+                 in v
+
+
     -- App (Var "tail") e  -> let (L' (Cons _ vs)) = eval env e in L' vs
-    App e e'            -> case eval env e of 
-                              Abs v e'' t -> eval ((v,eval env e'):env) e''
-                              otherwise   -> Err
+    -- App e e'            -> case eval env e of 
+    --                           Abs v e'' t -> eval ((v,eval env e'):env) e''
+    --                           otherwise   -> Err
+
 
     Case e cases        -> case eval env e of 
                               v -> case lookup (PVal v) cases of 
@@ -130,7 +152,7 @@ explain (EvalJ rho e v) = case e of
     LetRec x (Lit xv) e2   -> case lookup x rho of 
                                   Nothing -> [[EvalJ ((x,xv):rho) e2 v]] 
                                   _       -> [[EvalJ rho e2 v]]
-    App (App (Var "cons") e1) e2 -> [[EvalJ rho e1 (eval rho e1), EvalJ rho e2 (eval rho e2)]]
+    App (App (Var "cons") e1) e2 -> [[]]-- [[EvalJ rho e1 (eval rho e1), EvalJ rho e2 (eval rho e2)]]
     App (Var "head") e1    -> let (L' (e1':e1's)) = eval rho e1
                               in [[EvalJ rho e1 (L' (e1':e1's))]]
 
@@ -146,16 +168,39 @@ explain (EvalJ rho e v) = case e of
 
     -- App (Lit (Abs x e1 t)) e2    -> let v' = eval rho e2
     --                           in [[EvalJ rho e2 v', EvalJ ((x,v'):rho) e1 v]]
-    App f e1               -> let Abs x e2 t = eval rho f 
-                                  v'         = eval rho e1 
+    -- App f e1               -> let Abs x e2 t = eval rho f 
+                                  -- v'         = eval rho e1 
                               -- in [EvalJ rho f (Abs x e2 t), EvalJ rho e1 v', J ((x,v'):rho) e2 v]
-                              in [[EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
+                              -- in [[EvalJ rho e1 v', EvalJ ((x,v'):rho) e2 v]]
 
 {--
 rho : e1 => \x -> e3           rho : e2 => v'            rho[x -> v'] : e3 => v
 --------------------------------------------------------------------------------------------
 rho : e1 e2 => v
 --}
+
+
+
+
+{--
+e2 e3 => v'               e1 v' => v                              -- [v'/x]e1 => v
+------------------------------------------------------------------------App1
+e1 (e2 e3) => v
+--}
+    App e1 (App e2 e3) -> let v' = eval rho (App e2 e3)
+                              v  = eval rho (App e1 (Lit v'))
+                          in [[EvalJ rho (App e2 e3) v', EvalJ rho (App e1 (Lit v')) v]]
+
+
+{--
+e1 => \x -> e3                [e2/x]e3 => v
+---------------------------------------------App2
+e1 e2 => v
+--}
+    App e1 e2 -> let Abs x e3 t = eval rho e1
+                     e4         = ((Var x) ~> e2) e3
+                     v          = eval rho e4
+                 in [[EvalJ rho e1 (Abs x e3 t), EvalJ rho e4 v]]
 
     Op (Lit (N n)) op (Lit (N m)) -> [[EvalJ rho (Lit (N n)) (N n), EvalJ rho (Lit (N m)) (N m)]]
     Op (Lit v1) op (Lit v2)-> if v == evalOp op v1 v2 then [[]] else []

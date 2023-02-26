@@ -110,6 +110,7 @@ instance Show BinOp where
 
 
 treeMap :: (Expr -> Expr) -> Expr -> Expr
+treeMap f (Lit (Abs x e t)) = f $ (Lit (Abs x (treeMap f e) t))
 treeMap f (Lit v) = f $ Lit v
 treeMap f (Var x) = f $ Var x
 treeMap f (Let x e1 e2) = f $ Let x (treeMap f e1) (treeMap f e2)

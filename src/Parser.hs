@@ -54,11 +54,12 @@ j1 = EvalJ [] (Op (L []) Eq (L [])) (B True)
 
 remove :: EvalJ -> Bool
 -- remove (EvalJ _ (Lit v) v') = v == v'
+remove (EvalJ _ e (Abs _ _ _)) = True
 remove (EvalJ _ e v) | show e == show v = True
 remove (EvalJ _ (Var x) _) = True
 remove (EvalJ _ (Op (Lit (N _)) o (Lit (N _))) v) | o `elem` [Add,Mul,Sub,Div] = True
--- remove (EvalJ _ (Op _ o _) v) | o `elem` [Append] = True                           -- Sometimes useful
-remove (EvalJ _ (App (Var x) _) _) | x `elem` ["tail","head"] = True
+remove (EvalJ _ (Op _ o _) v) | o `elem` [Append] = True                           -- Sometimes useful
+remove (EvalJ _ (App (Var x) _) _) | x `elem` ["tail","head","cons"] = True
 remove _ = False
 
 containsIf :: Expr -> Bool
@@ -70,14 +71,22 @@ containsIf (If _ _ _) = True
 containsIf e = False
 
 filter1 :: Proof EvalJ -> Proof EvalJ
-filter1 (Node (EvalJ rho (If e1 e2 e3) v) [Node (EvalJ rho' e1' v') ps',Node (EvalJ rho'' e2or3 v'') ps''])
-  | not (containsIf e2or3) = Node ((EvalJ rho (If e1 e2 e3) v)) [(Node (EvalJ rho' e1' v') []),Node (EvalJ rho'' e2or3 v'') ps'']
-  | otherwise = Node ((EvalJ rho (If e1 e2 e3) v)) [Node (EvalJ rho'' e2or3 v'') ps'']
--- filter1 (Node (EvalJ rho (If e1 e2 e3) v) ((Node (EvalJ rho' e1' v') ps'):ps)) | e1 == e1' = Node ((EvalJ rho (If e1 e2 e3) v)) (map filter1 ps)
+-- filter1 (Node (EvalJ rho (If e1 e2 e3) v) [Node (EvalJ rho' e1' v') ps',Node (EvalJ rho'' e2or3 v'') ps''])
+--   | not (containsIf e2or3) = Node ((EvalJ rho (If e1 e2 e3) v)) [(Node (EvalJ rho' e1' v') []),Node (EvalJ rho'' e2or3 v'') ps'']
+--   | otherwise = Node ((EvalJ rho (If e1 e2 e3) v)) [Node (EvalJ rho'' e2or3 v'') ps'']
+filter1 (Node (EvalJ rho (If e1 e2 e3) v) ((Node (EvalJ rho' e1' v') ps'):ps)) | e1 == e1' = Node ((EvalJ rho (If e1 e2 e3) v)) (map filter1 ps)
 filter1 (Node j ps) = Node j (map filter1 ps)
 
 prune :: Proof EvalJ -> Proof EvalJ
 prune (Node j js) = filter1 $ Node j $ map prune $ filter (not . remove . conclusion) js
+
+fillInTrivial :: Proof EvalJ -> Proof EvalJ
+fillInTrivial (Node j@(EvalJ env e v) js) = Node (EvalJ env (fillInTrivialExprs j) v) (map fillInTrivial js)
+
+fillInTrivialExprs :: EvalJ -> Expr
+fillInTrivialExprs (EvalJ env e v) = treeMap f e
+  where f e'@(App (Var x) _) | x `elem` ["head","tail"] = Lit $ eval env e'
+        f e' = e'
 
 
 (~) :: EvalJ -> EvalJ -> Bool
