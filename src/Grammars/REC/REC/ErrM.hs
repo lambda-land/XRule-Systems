@@ -17,7 +17,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Parser.ErrM where
+module REC.ErrM where
 
 import Prelude             (id, const, Either(..), String)
 
@@ -56,7 +56,7 @@ instance MonadPlus Err where
 -- Copyright (C) 2004  Author:  Aarne Ranta
 -- This file comes with NO WARRANTY and may be used FOR ANY PURPOSE.
 
-module Parser.ErrM where
+module REC.ErrM where
 
 -- the Error monad: like Maybe type with error msgs
 

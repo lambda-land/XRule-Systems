@@ -1,0 +1,16 @@
+EInt.   Exp2 ::= Integer ;
+ETimes. Exp1 ::= Exp1 "*" Exp2 ;
+EPlus.  Exp  ::= Exp  "+" Exp1 ;
+
+_.      Exp2 ::= "(" Exp ")" ;
+_.      Exp1 ::= Exp2 ;
+_.      Exp  ::= Exp1 ;
+
+separator Ident " " ;
+
+LetRec. Exp ::= "let" "rec" Ident [Ident] "=" Exp "in" Exp ;
+Let. Exp ::= "let" Ident "=" Exp "in" Exp ;
+
+
+
+entrypoints Exp ;

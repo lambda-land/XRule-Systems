@@ -1,0 +1,146 @@
+comment "--" ;
+comment "{-" "-}" ;
+
+
+-- Rule defining identifiers beginning with an upper case letter
+position token TokUnit '(' ')' ;
+
+
+position token UIdent (upper (letter | digit | '_')*);
+position token PIdent letter (letter | digit | '_' | '\'')* ;
+position token PInteger digit+ ;
+
+
+-- layout  "let", "of"  ;
+
+layout "of" ;
+
+SCPLPROG. SCPL ::= [Defn] ;
+
+separator nonempty Defn  "" ; 
+
+DEFN.Defn ::=  PIdent "=" Stmt1;
+
+CASESTMT  .Stmt2  ::= "case" Exp "of" "{" [CaseTerm] "}" ;
+IFSTMT    .Stmt2  ::= "if" Exp "then" Stmt2 "else"  Stmt2  ;
+BARESTMT  .Stmt2  ::= Exp ;
+
+--coercions Stmt 2 ;
+
+-- exmp5 = letrec fac = \x -> if x == 0 then 1 else x * fac (x - 1) :: (Int -> Int) in fac 5 
+
+
+LET. Let ::= "let" ;
+LRec. Let ::= "letrec" ;
+
+ELet      .Stmt1  ::= Let LetInStmt "in" Stmt1; 
+_         .Stmt1  ::= Stmt2 ;
+
+
+--JustStmt1 .Stmt1  ::= Exp ; 
+
+CASE_STMT.CaseTerm ::= CasePattern "->"  Stmt1 ; 
+
+
+LET_IN_STMT.LetInStmt ::= PIdent "=" Exp ;
+
+
+
+
+-- ====================================================================
+--  Types 
+-- ====================================================================
+
+TYPEARROW          .Type  ::= TypeN "->"  Type ;
+TYPENext           .Type  ::= TypeN ;
+
+
+TYPEUNIT           .TypeN  ::= TokUnit ; 
+-- TYPELIST           .TypeN  ::= TokSBrO TypeN TokSBrC  ;
+TYPECONST_VAR      .TypeN  ::= UIdent ;
+TYPELIST           .TypeN  ::= "[" Type "]" ;
+TYPEPROD           .TypeN  ::= "<" [Type] ">" ;
+TYPEBRACKET        .TypeN  ::= "(" Type  ")" ;
+CONST_TYPE         .TypeN  ::= ConstantType ;
+
+
+separator TypeN "," ;
+
+separator nonempty Type ",";
+
+separator UIdent "," ;
+
+
+
+-- ====================================================================
+-- Sequential terms and functions
+-- ====================================================================
+
+
+
+
+
+
+
+
+
+
+TRUE_PATTERN.CasePattern ::= "True";
+FALSE_PATTERN.CasePattern ::= "False"; 
+
+separator nonempty CaseTerm ";" ;
+
+
+
+
+EInt. Exp15 ::= PInteger ;
+ETrue. Exp15 ::= "True" ;
+EFalse. Exp15 ::= "False" ;
+EVar.Exp15      ::= PIdent;
+EString.Exp15   ::= String ;
+EList. Exp15 ::=  "[" [Exp] "]" ; -- [1,2+3,3] -- foldl (\x y -> App (App (Var "cons") (transExp x)) y) (Var "nil") list 
+
+ECall. Exp15 ::= PIdent "(" [Exp] ")" ;
+
+ENeg. Exp13 ::= "-" Exp14 ;
+CONSTERM .Exp13    ::= Exp13 ":" Exp14 ;
+
+
+EAPPEND.Exp12 ::= Exp12 "++" Exp13 ;
+EMul. Exp12 ::= Exp12 "*" Exp13 ;
+EDiv. Exp12 ::= Exp12 "/" Exp13 ;
+
+EAdd. Exp11 ::= Exp11 "+" Exp12 ;
+ESub. Exp11 ::= Exp11 "-" Exp12 ;
+
+ELt. Exp9 ::= Exp9 "<" Exp10 ;
+EGt. Exp9 ::= Exp9 ">" Exp10 ;
+ELEq. Exp9 ::= Exp9 "<=" Exp10 ;
+EGEq. Exp9 ::= Exp9 ">=" Exp10 ;
+
+
+EEq. Exp8 ::= Exp8 "==" Exp9 ;
+ENEq. Exp8 ::= Exp8 "!=" Exp9 ;
+
+EAnd. Exp4 ::= Exp4 "&&" Exp5 ;
+EOr. Exp3 ::= Exp3 "||" Exp4 ;
+
+ELambda . Exp1 ::= "\\" [PIdent] "->" Stmt1;
+
+
+
+separator nonempty PIdent " " ;
+
+TYPEANNOTATION       .TypeAnnotation ::= "::" Type;
+TYPEANNOTATION_EMPTY .TypeAnnotation ::=  ;
+
+coercions Exp 15 ;
+separator Exp "," ;
+
+
+INTEGER.ConstantType ::= PInteger ;
+STRING .ConstantType ::= String ;
+CHAR   .ConstantType ::= Char ;
+DOUBLE .ConstantType ::= Double ;
+
+

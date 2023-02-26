@@ -63,7 +63,9 @@ library
         ProofDisplay,
         ExampleSystems,
         Parser,
-        Latex
+        Latex,
+        WinskelOpSem,
+        Grammars
 
     -- Modules included in this library but not exported.
     other-modules:
@@ -72,7 +74,7 @@ library
         AbsParser,
         LayoutParser,
         LexParser,
-        ParParser
+        ParParser,
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -83,6 +85,7 @@ library
         mtl ^>=2.2.2,
         array ^>= 0.5.4.0,
         process,
+        BNFC ^>=2.9.4
 
     -- Directories containing source files.
     hs-source-dirs:

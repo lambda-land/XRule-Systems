@@ -1,0 +1,47 @@
+
+
+
+APP-V
+P{e1=>\x.e'}    [v/x]e'=>w
+--------------------------
+           e1 v=>w
+
+The second rule uses another form of tags "X" that has two judgments: the first is used for the ordinary semantics, and the second will be used in explanations.
+
+APP-X
+P{e1=>\x.e'}    (e2 e3)=>v    [v/x]e'=>w
+----------------------------------------
+           X{e1 e2=>w|e1 v=>w}
+
+
+
+APP-X
+P{e1=>\x.e'}    (e2 e3)=>v    [v/x]e'=>w
+
+e2 e3 => v
+----------------------------------------
+           e1 (e2 e3) => v'
+
+
+length => \xs -> e 
+tail xs => [2,3,4,5]
+[[2,3,4,5]/xs]e => e'
+--------------------------------------
+1 + length (tail xs) => 5
+
+1 + length [2,3,4,5] => 5
+
+
+
+rec f . e
+
+
+data Tag a = Trivial a | Program a | X a | NoTag a
+
+
+class Functor f => Refine j f where
+    tag :: Proof j -> Proof (f j)
+
+instance Refine EvalJ Tag where
+    tag :: Proof EvalJ -> Proof (Tag EvalJ)
+
