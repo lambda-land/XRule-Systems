@@ -10,7 +10,7 @@ import System.IO
 import Control.Monad
 import Data.Maybe (fromJust)
 import Data.List (nubBy)
-
+import ErrorHandler (pullOutIO)
 
 parseFromFile :: FilePath -> IO (Either String [(String,Expr)])
 parseFromFile f = do
@@ -30,6 +30,7 @@ getExampleFromFile f s = do
   p <- parseFromFile f
   return (getBinding s p)
 getExampleFromFile' = getExampleFromFile "app/Ex1.xr"
+getExampleFromFile'' = pullOutIO . getExampleFromFile "app/Ex1.xr"
 evalFromFile en = getExampleFromFile "app/Ex1.xr" en >>= (\e -> print $ eval [] e)
 
 traceFromFile en = getExampleFromFile "app/Ex1.xr" en >>= (\e -> print $ trace e)
@@ -69,6 +70,8 @@ containsIf (Op e _ e') = containsIf e || containsIf e'
 containsIf (App e e') = containsIf e || containsIf e'
 containsIf (If _ _ _) = True
 containsIf e = False
+
+
 
 filter1 :: Proof EvalJ -> Proof EvalJ
 -- filter1 (Node (EvalJ rho (If e1 e2 e3) v) [Node (EvalJ rho' e1' v') ps',Node (EvalJ rho'' e2or3 v'') ps''])

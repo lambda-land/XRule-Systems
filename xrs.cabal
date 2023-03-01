@@ -63,7 +63,8 @@ library
         ProofDisplay,
         ExampleSystems,
         Parser,
-        Latex
+        Latex,
+        Tagger
 
     -- Modules included in this library but not exported.
     other-modules:
