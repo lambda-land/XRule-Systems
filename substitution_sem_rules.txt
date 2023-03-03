@@ -1,0 +1,16 @@
+
+
+
+v := \x -> e | n | b
+
+e := v | x | let x = e in e | letrec x = e in e | e e | e op e
+
+
+e => v'     [v'/x]e' => v
+------------------------------------ 
+let x = e in e' => v
+
+
+
+
+
