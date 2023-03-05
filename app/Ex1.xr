@@ -3,6 +3,15 @@ iain = let id = \x -> x in id("Iain")
 
 headEx = head([1,2,3])
 
+f = ..
+g = ...
+
+
+e = let id = ... in e'
+
+{f -> .., g -> .., e -> ..} : e => v
+
+ex = let rec f = .. ; g = ... in ...
 
 
 exmp5 = letrec fac = \x -> case x == 0  of

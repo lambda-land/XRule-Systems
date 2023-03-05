@@ -129,7 +129,7 @@ shrink env e = nubBy (\a b -> fst a == fst b) $ filter notLambda $ filter (\(x,_
         notLambda _ = True
 
 toThePoint :: Proof EvalJ -> Proof EvalJ
-toThePoint (Node (EvalJ _ (Let _ _ _) _) [p]) = toThePoint p
+toThePoint (Node (EvalJ _ (Let _ _ _) _) [p,p']) = toThePoint p'
 toThePoint (Node (EvalJ _ (LetRec _ _ _) _) [p]) = toThePoint p
 toThePoint p = p
 

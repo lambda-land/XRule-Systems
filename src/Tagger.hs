@@ -6,8 +6,12 @@ import OpSem
 import Parser (parseString,containsIf,shrink,getExampleFromFile'')
 import Data.List (intercalate)
 
+-- data Expr = App FName FDefn Args
+--           | NamedThunk Expr Expr
+-- App "id" (Abs "x" (Var "x")) (L "Iain")
+-- "(flip add) 1 2"
 
-ex = parseString "let id = \\x -> x in id(\"Iain\")"
+ex = parseString  "let flip = (\\f -> \\x -> \\y -> f(y,x)) in let add = (\\x y -> x - y) in flip(add,1,2)"-- "let id = \\x -> x in id(\"Iain\")"
 ex1 = getExampleFromFile'' "exmp2"
 prove e = suppose (EvalJ [] e (eval [] e))
 pf = suppose (EvalJ [] ex (eval [] ex))

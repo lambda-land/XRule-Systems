@@ -42,6 +42,50 @@ eval env x = case x of
     Lit (Abs v e t)     -> Abs v e t -- (Abs v (replace [v] env e) t) 
     Lit v               -> v 
     Var x               -> case lookup x env of { Just y -> y; _ -> error $ x ++ " -| " ++ show env }-- fromJust (lookup x env)
+    Let x e e'          -> let v' = eval env e
+                               e'' = (Var x ~> Lit v') e'
+                               in eval env e''
+    LetRec v (Lit e) e' -> eval ((v,e):env) e'
+    -- TODO LetRec v (Lit (Abs x e t)) e' -> eval ((v,e):env) e'
+    Op lhs op rhs       -> evalOp op (eval env lhs) (eval env rhs)
+    L es                -> L' (map (eval env) es)
+    -- App (App (Var "cons") e) e' -> L' (Cons (eval env e) (eval env e'))
+    -- App (Var "head") e  -> case eval env e of 
+    --                         (L' (Cons v _)) -> v
+    --                         (L' Nil)       -> error "head: empty list"
+    App (App (Var "cons") e) e' -> let (L' vs) = eval env e' in L' (eval env e : vs)
+    App (Var "head") e  -> let (L' (x:_)) = eval env e in x
+    App (Var "tail") e  -> let (L' (_:xs)) = eval env e in L' xs
+
+    App e1 (App e2 e3) -> let v' = eval env (App e2 e3)
+                              v = eval env (App e1 (Lit v'))
+                          in v
+
+    App e1 e2 -> let (Abs x e3 t) = eval env e1
+                     e4 = (Var x ~> e2) e3
+                     v = eval env e4
+                 in v
+
+
+    Case e cases        -> case eval env e of 
+                              v -> case lookup (PVal v) cases of 
+                                Just e' -> eval env e'
+                                Nothing -> case lookup PWild cases of 
+                                  Just e' -> eval env e'
+                                  Nothing -> error "No match"
+
+    If e e1 e2          -> case eval env e of
+                                B True  -> eval env e1
+                                B False -> eval env e2
+                                _       -> error "not a boolean"
+
+{--
+eval env x = case x of 
+    Lit (S s)           -> eval env $ L (map (Lit . C) s)
+    Lit (L' l)          -> L' l
+    Lit (Abs v e t)     -> Abs v e t -- (Abs v (replace [v] env e) t) 
+    Lit v               -> v 
+    Var x               -> case lookup x env of { Just y -> y; _ -> error $ x ++ " -| " ++ show env }-- fromJust (lookup x env)
     Let v e e'          -> eval ((v,eval env e):env) e'
     LetRec v (Lit e) e' -> eval ((v,e):env) e'
     -- TODO LetRec v (Lit (Abs x e t)) e' -> eval ((v,e):env) e'
@@ -54,6 +98,7 @@ eval env x = case x of
     App (App (Var "cons") e) e' -> let (L' vs) = eval env e' in L' (eval env e : vs)
     App (Var "head") e  -> let (L' (x:_)) = eval env e in x
     App (Var "tail") e  -> let (L' (_:xs)) = eval env e in L' xs
+
 
 
 {--
@@ -93,7 +138,7 @@ e1 e2 => v
                                 B True  -> eval env e1
                                 B False -> eval env e2
                                 _       -> error "not a boolean"
-
+--}
 
 evalOp :: BinOp -> Val -> Val -> Val
 evalOp op v1 v2 = case (op,v1,v2) of
@@ -138,6 +183,7 @@ showContext e = "{ " ++ (intercalate ", " $ map (\(x,y) ->  x ++ " |-> " ++ show
 
 explain :: EvalJ -> [[EvalJ]]
 explain (EvalJ rho e v) = case e of
+    e | eval rho e /= v -> []
     Lit v' | v == v'       -> [[]]
     Lit (S s) | v == L' (map C s) -> [[]]
 
@@ -146,9 +192,12 @@ explain (EvalJ rho e v) = case e of
     L []                   -> [[]]
     L (e:es)               -> [[EvalJ rho e (eval rho e),EvalJ rho (L es) (eval rho (L es))]]
 
-    Let x e1 e2            -> let v1 = eval rho e1 
-                              in [[EvalJ rho e1 v1, EvalJ ((x,v1):rho) e2 v]]
-
+    Let x e1 e2            -> -- let v1 = eval rho e1 
+                              -- in [[EvalJ rho e1 v1, EvalJ ((x,v1):rho) e2 v]]
+                                let v1 = eval rho e1
+                                    e2' = (Var x ~> Lit v1) e2
+                                    v' = eval rho e2'
+                                in [[EvalJ rho e1 v1, EvalJ rho e2' v']]
     LetRec x (Lit xv) e2   -> case lookup x rho of 
                                   Nothing -> [[EvalJ ((x,xv):rho) e2 v]] 
                                   _       -> [[EvalJ rho e2 v]]
